@@ -42,18 +42,16 @@ namespace VoxelEngine.engine
         };
 
 
-        public static Vector3[] TestTop = { new Vector3(0, 15, 0), new Vector3(15, 15, 15) };
-        public static Vector3[] TestBottom = { new Vector3(0, 15, 0), new Vector3(15, 15, 15) };
-
-
         private static Color CurrentColor = new Color();
         private static List<Vector3> Vertices = new List<Vector3>();
         private static List<Vector3> Normals = new List<Vector3>();
         private static List<Color> Colors = new List<Color>();
 
         // Creates a cube using an array.
-        public static ArrayMesh Render(Block[,,] data)
+        public static ArrayMesh Render(SubChunk chunk)
         {
+            Block[,,] data = chunk.GetData();
+            
             var arrayMesh = new ArrayMesh();
 
             // Array container other arrays.
@@ -64,6 +62,10 @@ namespace VoxelEngine.engine
             Vertices = new List<Vector3>();
             Normals = new List<Vector3>();
             Colors = new List<Color>();
+
+            // If sub-chunk is completely surrounded. dont render.
+            if (chunk.GetChunk().isSurrounded && !chunk.RenderBottom && !chunk.RenderTop)
+                return null;
 
             // 16 x 16 x 16 = 4096 blocks.
             for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -77,7 +79,7 @@ namespace VoxelEngine.engine
                             continue;
 
                         // Create cube.
-                        CreateBlock(new Vector3(x, y, z), data);
+                        CreateBlock(new Vector3(x, y, z), chunk);
                     }
                 }
             }
@@ -96,8 +98,10 @@ namespace VoxelEngine.engine
             return arrayMesh;
         }
 
-        private static void CreateBlock(Vector3 position, Block[,,] data)
+        private static void CreateBlock(Vector3 position, SubChunk chunk)
         {
+            Block[,,] data = chunk.GetData();
+
             // Position as integer.
             int x = (int)position.x;
             int y = (int)position.y;
@@ -116,6 +120,8 @@ namespace VoxelEngine.engine
             if (left && right && top && bottom && front && back)
                 return;
 
+            
+
             // TODO have a way to access the surrounding chunk.
             // to remove the faces on the borders of every chunk.
 
@@ -126,7 +132,14 @@ namespace VoxelEngine.engine
             // or not a face of a cube.
             foreach (CUBE_FACES face in Enum.GetValues(typeof(CUBE_FACES)))
                 if (lutFaces[(int)face] == true)
+                {
+                    if (face is CUBE_FACES.Bottom && y == 0 && !chunk.RenderBottom)
+                        continue;
+                    if (face is CUBE_FACES.Top && y == 15 && !chunk.RenderTop)
+                        continue;
                     CreateFace(face, position);
+                }
+                    
 
         }
 
