@@ -19,5 +19,10 @@ namespace VoxelEngine.Engine.World
             { BLOCK_TYPE.Leaves, new Color(1,0,0) },
             { BLOCK_TYPE.Trunk, new Color(1,0,0) },
         };
+
+        public static Color GetColor(BLOCK_TYPE type)
+        {
+            return m_Palette[type];
+        }
     }
 }

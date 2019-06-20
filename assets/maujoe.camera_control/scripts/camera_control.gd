@@ -46,6 +46,7 @@ var _total_pitch = 0.0
 var _direction = Vector3(0.0, 0.0, 0.0)
 var _speed = Vector3(0.0, 0.0, 0.0)
 var _gui
+onready var wr = weakref(self);
 
 func _ready():
 	_check_actions([forward_action, backward_action, left_action, right_action, gui_action, up_action, down_action])
@@ -92,7 +93,7 @@ func _input(event):
 func _process(delta):
 	if privot:
 		_update_distance()
-	if mouselook:
+	if wr.get_ref() and mouselook:
 		_update_mouselook()
 	if movement:
 		_update_movement(delta)

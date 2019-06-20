@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VoxelEngine.engine.World;
+using VoxelEngine.Engine.World;
 
 namespace VoxelEngine.engine
 {
@@ -63,8 +64,14 @@ namespace VoxelEngine.engine
             Normals = new List<Vector3>();
             Colors = new List<Color>();
 
+            if (chunk.isEmpty())
+                return null;
+
+
             // If sub-chunk is completely surrounded. dont render.
-            if (chunk.GetChunk().isSurrounded && !chunk.RenderBottom && !chunk.RenderTop)
+            if (!chunk.RenderBottom && !chunk.RenderTop && 
+                !chunk.RenderLeft && !chunk.RenderRight &&
+                !chunk.RenderFront && !chunk.RenderBack)
                 return null;
 
             // 16 x 16 x 16 = 4096 blocks.
@@ -88,7 +95,7 @@ namespace VoxelEngine.engine
             arrays[(int)ArrayMesh.ArrayType.Vertex] = Vertices.ToArray();
             arrays[(int)ArrayMesh.ArrayType.Normal] = Normals.ToArray();
             arrays[(int)ArrayMesh.ArrayType.Color] = Colors.ToArray();
-            
+
             // Create surface from arrays.
             arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
 
@@ -101,7 +108,7 @@ namespace VoxelEngine.engine
         private static void CreateBlock(Vector3 position, SubChunk chunk)
         {
             Block[,,] data = chunk.GetData();
-
+            
             // Position as integer.
             int x = (int)position.x;
             int y = (int)position.y;
@@ -109,10 +116,10 @@ namespace VoxelEngine.engine
 
             // False if there is a block next to those faces. 
             bool left, right, top, bottom, front, back;
-            left   = x != 0  ? !data[x - 1, y, z].Active : true;
-            right  = x != 15 ? !data[x + 1, y, z].Active : true;
             top    = y != 15 ? !data[x, y + 1, z].Active : true;
             bottom = y != 0  ? !data[x, y - 1, z].Active : true;
+            left   = x != 0  ? !data[x - 1, y, z].Active : true;
+            right  = x != 15 ? !data[x + 1, y, z].Active : true;
             front  = z != 15 ? !data[x, y, z + 1].Active : true;
             back   = z != 0  ? !data[x, y, z - 1].Active : true;
 
@@ -120,27 +127,48 @@ namespace VoxelEngine.engine
             if (left && right && top && bottom && front && back)
                 return;
 
-            
+            bool leftChunk = chunk.Chunk.ChunkLeft.GetBlock(15, y, z).Active;
+            bool rightChunk = chunk.Chunk.ChunkLeft.GetBlock(0, y, z).Active;
+            bool frontChunk = chunk.Chunk.ChunkLeft.GetBlock(x, y, 0).Active;
+            bool backChunk = chunk.Chunk.ChunkLeft.GetBlock(x, y, 15).Active;
 
-            // TODO have a way to access the surrounding chunk.
-            // to remove the faces on the borders of every chunk.
+            // TODO: FIX RENDERING!
+            // Faces that shouldnt be rendered are rendered.
+            // idk why. too tired. good night.
 
-            // Look up table for iteration.
-            bool[] lutFaces = { top, bottom, left, right, front, back };
+            // False if should not render chunk border faces.
+            bool topBorder    = y == 15 ? chunk.RenderTop   : top;
+            bool bottomBorder = y == 0 ? chunk.RenderBottom : bottom;
+            bool leftBorder   = x == 0 ? chunk.RenderLeft && leftChunk : left;
+            bool rightBorder  = x == 15 ? chunk.RenderRight && rightChunk : right;
+            bool frontBorder  = z == 15 ? chunk.RenderFront && frontChunk : front;
+            bool backBorder   = z == 0 ? chunk.RenderBack && backChunk : back;
+
+            // Display the chunk in green if chunk is surrounded.
+            if (chunk.Chunk.isSurrounded)
+                CurrentColor = new Color(0, 1, 0);
+            else
+                CurrentColor = new Color(1, 0, 0);
+
+            // Represent each faces of a cube and if it should place
+            // each faces. Placed in the same order in CUBE_FACES enum.
+            bool[] lutFaces = 
+            {
+                topBorder, bottomBorder,
+                leftBorder, rightBorder,
+                frontBorder, backBorder
+            };
 
             // Iterating through each face and check if we should place
-            // or not a face of a cube.
+            // or not a face of a cube in the LUT just declared before.
             foreach (CUBE_FACES face in Enum.GetValues(typeof(CUBE_FACES)))
+            {
+                // If the LUT returns true, create the face.
                 if (lutFaces[(int)face] == true)
                 {
-                    if (face is CUBE_FACES.Bottom && y == 0 && !chunk.RenderBottom)
-                        continue;
-                    if (face is CUBE_FACES.Top && y == 15 && !chunk.RenderTop)
-                        continue;
                     CreateFace(face, position);
                 }
-                    
-
+            }
         }
 
 

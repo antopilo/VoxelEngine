@@ -51,10 +51,12 @@
   <ItemGroup>
     <Compile Include="Engine\World\Block.cs" />
     <Compile Include="Engine\World\BlockPalette.cs" />
-    <Compile Include="Engine\World\Chunk.cs" />
+    <Compile Include="Engine\World\Chunk\Chunk.cs" />
     <Compile Include="Engine\Engine.cs" />
     <Compile Include="Engine\Renderer.cs" />
     <Compile Include="Engine\World\ChunkManager.cs" />
+    <Compile Include="Engine\World\Chunk\SubChunk.cs" />
+    <Compile Include="Engine\World\Generation\NoiseMaker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
