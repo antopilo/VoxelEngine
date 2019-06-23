@@ -47,14 +47,14 @@ public class Engine : Node
         //ChunkManager.LoadThread();
         
 
-        //m_Threads[(int)Threads.PRELOAD].Start();
+        m_Threads[(int)Threads.PRELOAD].Start();
         m_Threads[(int)Threads.RENDER].Start();
     }
 
     public override void _Process(float delta)
     {
         ChunkManager.UpdatePreloaded();
-        ChunkManager.LoadThread();
+        //ChunkManager.LoadThread();
         
         //ChunkManager.RenderThread();
     }

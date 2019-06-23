@@ -33,9 +33,17 @@ public class NoiseMaker
         {
             for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
             {
+                Block newBlock = new Block()
+                {
+                    Active = true,
+                    Type = BLOCK_TYPE.Stone,
+                };
+                
                 float height = ((Noise.GetNoise2d(x + offsetX, z + offsetZ) + 1f) / 2 ) * (Chunk.CHUNK_SIZE * 16) / 2;
                 for (int i = 0; i < height; i++)
                 {
+                    if (i > height - 5)
+                        newBlock.Type = BLOCK_TYPE.Grass;
                     chunk.AddBlock(new Vector3(x, i, z), new Block());
                 }
                

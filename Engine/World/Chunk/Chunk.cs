@@ -111,7 +111,7 @@ public class Chunk : Spatial
                 if (i != 0 && subChunk.isBottomFull() && m_SubChunks[i - 1].isTopFull())
                     subChunk.RenderBottom = false;
                 else
-                    subChunk.RenderBottom = true;
+                    subChunk.RenderBottom = false;
 
                 // Left & Right.
                 if (subChunk.isLeftFull() && this.ChunkLeft.GetSubChunk(i).isRightFull())

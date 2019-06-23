@@ -24,8 +24,8 @@ public class ChunkManager
 
     public static void LoadThread()
     {
-        //while (true)
-        //{
+        while (true)
+        {
             try
             {
                 if (m_ChunkLoadList.Count > 0)
@@ -52,7 +52,7 @@ public class ChunkManager
             {
                 GD.Print("Error in Loadthread - " + e);
             }
-        //}
+        }
     }
 
 

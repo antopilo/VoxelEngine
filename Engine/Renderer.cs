@@ -127,6 +127,7 @@ namespace VoxelEngine.engine
             if (left && right && top && bottom && front && back)
                 return;
 
+            bool topChunk = chunk.RenderTop;
             bool leftChunk = chunk.Chunk.ChunkLeft.GetBlock(15, y, z).Active;
             bool rightChunk = chunk.Chunk.ChunkLeft.GetBlock(0, y, z).Active;
             bool frontChunk = chunk.Chunk.ChunkLeft.GetBlock(x, y, 0).Active;
@@ -134,21 +135,17 @@ namespace VoxelEngine.engine
 
             // TODO: FIX RENDERING!
             // Faces that shouldnt be rendered are rendered.
-            // idk why. too tired. good night.
 
             // False if should not render chunk border faces.
             bool topBorder    = y == 15 ? chunk.RenderTop   : top;
             bool bottomBorder = y == 0 ? chunk.RenderBottom : bottom;
-            bool leftBorder   = x == 0 ? chunk.RenderLeft && leftChunk : left;
-            bool rightBorder  = x == 15 ? chunk.RenderRight && rightChunk : right;
-            bool frontBorder  = z == 15 ? chunk.RenderFront && frontChunk : front;
-            bool backBorder   = z == 0 ? chunk.RenderBack && backChunk : back;
+            bool leftBorder   = x == 0 ? chunk.RenderLeft && !leftChunk : left;
+            bool rightBorder  = x == 15 ? chunk.RenderRight && !rightChunk : right;
+            bool frontBorder  = z == 15 ? chunk.RenderFront && !frontChunk : front;
+            bool backBorder   = z == 0 ? chunk.RenderBack && !backChunk : back;
 
             // Display the chunk in green if chunk is surrounded.
-            if (chunk.Chunk.isSurrounded)
-                CurrentColor = new Color(0, 1, 0);
-            else
-                CurrentColor = new Color(1, 0, 0);
+            CurrentColor = BlockPalette.GetColor(chunk.Chunk.ChunkLeft.GetBlock(x, y, z).Type);
 
             // Represent each faces of a cube and if it should place
             // each faces. Placed in the same order in CUBE_FACES enum.
@@ -233,7 +230,7 @@ namespace VoxelEngine.engine
         {
             Vertices.Add(position + CUBE_VERTICES[idx]);
             Normals.Add(normal);
-            Colors.Add(CurrentColor.Blend(new Color(rng.Randf(), rng.Randf(), rng.Randf())));
+            Colors.Add(CurrentColor);
         }
 
         // Apply the default material on each surface
