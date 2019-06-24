@@ -107,6 +107,8 @@ namespace VoxelEngine.engine
 
         private static void CreateBlock(Vector3 position, SubChunk chunk)
         {
+            int subChunkId = chunk.SubChunkId;
+
             Block[,,] data = chunk.GetData();
             
             // Position as integer.
@@ -127,22 +129,33 @@ namespace VoxelEngine.engine
             if (left && right && top && bottom && front && back)
                 return;
 
-            bool topChunk = chunk.RenderTop;
-            bool leftChunk = chunk.Chunk.ChunkLeft.GetBlock(15, y, z).Active;
+           
+            bool leftChunk  = chunk.Chunk.ChunkLeft.GetBlock(15, y, z).Active;
             bool rightChunk = chunk.Chunk.ChunkLeft.GetBlock(0, y, z).Active;
             bool frontChunk = chunk.Chunk.ChunkLeft.GetBlock(x, y, 0).Active;
-            bool backChunk = chunk.Chunk.ChunkLeft.GetBlock(x, y, 15).Active;
+            bool backChunk  = chunk.Chunk.ChunkLeft.GetBlock(x, y, 15).Active;
 
-            // TODO: FIX RENDERING!
             // Faces that shouldnt be rendered are rendered.
+            bool topChunk = false;
+            bool bottomChunk = false;
+            if (subChunkId != 15)
+            {
+                SubChunk topSubChunk = chunk.Chunk.GetSubChunk(subChunkId + 1);
+                topChunk = topSubChunk.GetBlock(x, 0, z).Active;
+            }
+            if (subChunkId != 0)
+            {
+                SubChunk botSubChunk = chunk.Chunk.GetSubChunk(subChunkId + 1);
+                bottomChunk = botSubChunk.GetBlock(x, 15, z).Active;
+            }
 
             // False if should not render chunk border faces.
-            bool topBorder    = y == 15 ? chunk.RenderTop   : top;
-            bool bottomBorder = y == 0 ? chunk.RenderBottom : bottom;
-            bool leftBorder   = x == 0 ? chunk.RenderLeft && !leftChunk : left;
-            bool rightBorder  = x == 15 ? chunk.RenderRight && !rightChunk : right;
-            bool frontBorder  = z == 15 ? chunk.RenderFront && !frontChunk : front;
-            bool backBorder   = z == 0 ? chunk.RenderBack && !backChunk : back;
+            bool topBorder    = y == 15 ? chunk.RenderTop    && !topChunk    : top;
+            bool bottomBorder = y == 0  ? chunk.RenderBottom && !bottomChunk : bottom;
+            bool leftBorder   = x == 0  ? chunk.RenderLeft   && !leftChunk   : left;
+            bool rightBorder  = x == 15 ? chunk.RenderRight  && !rightChunk  : right;
+            bool frontBorder  = z == 15 ? chunk.RenderFront  && !frontChunk  : front;
+            bool backBorder   = z == 0  ? chunk.RenderBack   && !backChunk   : back;
 
             // Display the chunk in green if chunk is surrounded.
             CurrentColor = BlockPalette.GetColor(chunk.Chunk.ChunkLeft.GetBlock(x, y, z).Type);
