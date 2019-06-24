@@ -135,18 +135,24 @@ namespace VoxelEngine.engine
             bool frontChunk = chunk.Chunk.ChunkLeft.GetBlock(x, y, 0).Active;
             bool backChunk  = chunk.Chunk.ChunkLeft.GetBlock(x, y, 15).Active;
 
-            // Faces that shouldnt be rendered are rendered.
+            // Check if there is a block in the above subchunk.
             bool topChunk = false;
             bool bottomChunk = false;
             if (subChunkId != 15)
             {
                 SubChunk topSubChunk = chunk.Chunk.GetSubChunk(subChunkId + 1);
-                topChunk = topSubChunk.GetBlock(x, 0, z).Active;
+                if (topSubChunk.isFull())
+                    topChunk = true;
+                else
+                    topChunk = topSubChunk.GetBlock(x, 0, z).Active;
             }
             if (subChunkId != 0)
             {
-                SubChunk botSubChunk = chunk.Chunk.GetSubChunk(subChunkId + 1);
-                bottomChunk = botSubChunk.GetBlock(x, 15, z).Active;
+                SubChunk botSubChunk = chunk.Chunk.GetSubChunk(subChunkId - 1);
+                if (botSubChunk.isFull())
+                    topChunk = true;
+                else
+                    bottomChunk = botSubChunk.GetBlock(x, 15, z).Active;
             }
 
             // False if should not render chunk border faces.
