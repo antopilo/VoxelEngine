@@ -20,9 +20,6 @@ namespace VoxelEngine.Engine.World
 
         private Block[,,] m_Blocks = new Block[16, 16, 16];
 
-        // Total count of block in m_Block.
-        private int m_count = 0;
-
         // Total count of block on each faces.
         private int m_topCount = 0;
         private int m_bottomCount = 0;
@@ -40,7 +37,7 @@ namespace VoxelEngine.Engine.World
 
             if (filled)
             {
-                m_count = (int)Math.Pow(Chunk.CHUNK_SIZE, 3);
+                BlockCount = (int)Math.Pow(Chunk.CHUNK_SIZE, 3);
                 block.Active = true;
             }
 
@@ -53,25 +50,19 @@ namespace VoxelEngine.Engine.World
         }
 
 
-        public int BlockCount
-        {
-            get
-            {
-                return m_count;
-            }
-        }
+        public int BlockCount { get; private set; } = 0;
 
 
 
         // Whole chunk is full or empty
         public bool isFull()
         {
-            return m_count == Math.Pow(Chunk.CHUNK_SIZE, 3);
+            return BlockCount == Math.Pow(Chunk.CHUNK_SIZE, 3);
         }
 
         public bool isEmpty()
         {
-            return m_count == 0;
+            return BlockCount == 0;
         }
 
         // Is each side full or empty.
@@ -154,7 +145,7 @@ namespace VoxelEngine.Engine.World
             
             // Sets the block and update the total count.
             m_Blocks[x, y, z] = block;
-            m_count++;
+            BlockCount++;
         }
 
         // Removes a block in this subchunk.
@@ -184,20 +175,20 @@ namespace VoxelEngine.Engine.World
 
             // Remove it and decrease the count.
             m_Blocks[x, y, z].Active = false;
-            m_count--;
+            BlockCount--;
         }
 
         // Signals for frustrum culling
         public void CameraEntered(Camera camera)
         {
-            if (camera.Name == "CameraInGame")
-                this.Visible = true;
+            //if (camera.Name == "CameraInGame")
+            //    this.Visible = true;
         }
 
         public void CameraExited(Camera camera)
         {
-            if (camera.Name == "CameraInGame")
-                this.Visible = false;
+            //if (camera.Name == "CameraInGame")
+            //    this.Visible = false;
         }
     }
 }

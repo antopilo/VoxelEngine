@@ -17,12 +17,8 @@ public class Chunk : Spatial
     public bool isSurrounded = false;
 
     private SubChunk[] m_SubChunks = new SubChunk[SUBCHUNK_COUNT];
-    
-    public SubChunk GetSubChunk(int idx)
-    {
-        return m_SubChunks[idx];
-    }
 
+    #region Neighbors 
     public Chunk ChunkLeft
     {
         get
@@ -66,6 +62,8 @@ public class Chunk : Spatial
                 return null;
         }
     }
+    #endregion
+
 
     public void ChunkSetup()
     {
@@ -78,13 +76,14 @@ public class Chunk : Spatial
             m_SubChunks[sc].Chunk = this;
         }
 
-
         var defaultBlock = new Block();
         defaultBlock.Active = false;   
 
         Update();
     }
 
+
+    // Sets the chunk position used in generation.
     public void SetPosition(Vector2 position)
     {
         int x = (int)position.x * (int)CHUNK_SIZE;
@@ -94,6 +93,8 @@ public class Chunk : Spatial
         this.Translation = new Vector3(x, 0, z);
     }
 
+
+    // Updates all the flags in each subchunks.
     public void Update()
     {
         isSurrounded = ChunkManager.IsChunkSurrounded(Position);
@@ -108,6 +109,7 @@ public class Chunk : Spatial
                     subChunk.RenderTop = false;
                 else
                     subChunk.RenderTop = true;
+
                 if (i != 0 && subChunk.isBottomFull() && m_SubChunks[i - 1].isTopFull())
                     subChunk.RenderBottom = false;
                 else
@@ -138,19 +140,34 @@ public class Chunk : Spatial
         }
     }
 
-    public static int GetSubChunkIdFromHeight(int heigth)
+
+    // Gets the subchunk index from global height.
+    public static int GetSubChunkIdFromHeight(int height)
     {
-        return Mathf.Clamp((heigth / CHUNK_SIZE), 0, CHUNK_SIZE - 1);
+        return Mathf.Clamp((height / CHUNK_SIZE), 0, CHUNK_SIZE - 1);
     }
 
+
+    // Gets a subchunk from an index.
+    public SubChunk GetSubChunk(int idx)
+    {
+        return m_SubChunks[idx];
+    }
+
+
+    // Returns a block from global position
     public Block GetBlock(Vector3 position)
     {
         int x = (int)position.x;
         int y = (int)position.y;
         int z = (int)position.z;
+
+        // Skip duplicate code.
         return GetBlock(x, y, z);
     }
 
+
+    // Returns a block from global position
     public Block GetBlock(int x, int y, int z)
     {
         int subChunkIndex = GetSubChunkIdFromHeight(y);
@@ -158,14 +175,16 @@ public class Chunk : Spatial
         return m_SubChunks[subChunkIndex].GetBlock(x, subChunkHeight, z);
     }
 
+
+    // Adds a block into a subchunk from global position.
     public void AddBlock(Vector3 position, Block block)
     {
         int subChunkIndex = GetSubChunkIdFromHeight((int)position.y);
         int subChunkHeight = (int)position.y - ((int)CHUNK_SIZE * (subChunkIndex));
         var localPosition = new Vector3(position.x, subChunkHeight, position.z);
         m_SubChunks[subChunkIndex].AddBlock(localPosition, block);
-
     }
+
 
     // Renders all the chunk, including the subchunks.
     public void Render()
@@ -185,12 +204,16 @@ public class Chunk : Spatial
             var size = new Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE);
             visibilityNotifier.Aabb = new AABB(new Vector3(), size);
             subChunk.AddChild(visibilityNotifier);
+
+            // Connect the signals to the methods on the subchunk.
             visibilityNotifier.Connect("camera_entered", subChunk, "CameraEntered", null, 1);
             visibilityNotifier.Connect("camera_exited", subChunk, "CameraExited", null, 1);
                 
         }
     }
 
+
+    // Force set a subchunk to be visible or not.
     public void SetSubChunkVisibility(int idx, bool toggle)
     {
         m_SubChunks[idx].Visible = toggle;

@@ -51,11 +51,12 @@ namespace VoxelEngine.engine
         // Creates a cube using an array.
         public static ArrayMesh Render(SubChunk chunk)
         {
-            Block[,,] data = chunk.GetData();
+            
             
             var arrayMesh = new ArrayMesh();
 
-            // Array container other arrays.
+            // Array containing other arrays.
+            // OpenGL array buffer.
             var arrays = new Godot.Collections.Array();
             arrays.Resize((int)ArrayMesh.ArrayType.Max);
 
@@ -82,14 +83,17 @@ namespace VoxelEngine.engine
                     for (int y  = 0; y < Chunk.CHUNK_SIZE; y++)
                     {
                         // No cube if not active.
-                        if (data[x, y, z].Active == false)
+                        if (chunk.GetBlock(x, y, z).Active == false)
                             continue;
 
                         // Create cube.
                         CreateBlock(new Vector3(x, y, z), chunk);
                     }
-                }
+                }   
             }
+
+            if (Vertices.Count == 0)
+                return null;
 
             // Fill the array with the others arrays.
             arrays[(int)ArrayMesh.ArrayType.Vertex] = Vertices.ToArray();
@@ -107,9 +111,8 @@ namespace VoxelEngine.engine
 
         private static void CreateBlock(Vector3 position, SubChunk chunk)
         {
+            // subChunk index in the Chunk itself. [0, 15]
             int subChunkId = chunk.SubChunkId;
-
-            Block[,,] data = chunk.GetData();
             
             // Position as integer.
             int x = (int)position.x;
@@ -118,54 +121,56 @@ namespace VoxelEngine.engine
 
             // False if there is a block next to those faces. 
             bool left, right, top, bottom, front, back;
-            top    = y != 15 ? !data[x, y + 1, z].Active : true;
-            bottom = y != 0  ? !data[x, y - 1, z].Active : true;
-            left   = x != 0  ? !data[x - 1, y, z].Active : true;
-            right  = x != 15 ? !data[x + 1, y, z].Active : true;
-            front  = z != 15 ? !data[x, y, z + 1].Active : true;
-            back   = z != 0  ? !data[x, y, z - 1].Active : true;
+            top    = y != 15 ? !chunk.GetBlock(x, y + 1, z).Active : true;
+            bottom = y != 0  ? !chunk.GetBlock(x, y - 1, z).Active : true;
+            left   = x != 0  ? !chunk.GetBlock(x - 1, y, z).Active : true;
+            right  = x != 15 ? !chunk.GetBlock(x + 1, y, z).Active : true;
+            front  = z != 15 ? !chunk.GetBlock(x, y, z + 1).Active : true;
+            back   = z != 0  ? !chunk.GetBlock(x, y, z - 1).Active : true;
 
             // If the block is completly surrounded(not seen).
             if (left && right && top && bottom && front && back)
                 return;
-
-           
-            bool leftChunk  = chunk.Chunk.ChunkLeft.GetBlock(15, y, z).Active;
-            bool rightChunk = chunk.Chunk.ChunkLeft.GetBlock(0, y, z).Active;
-            bool frontChunk = chunk.Chunk.ChunkLeft.GetBlock(x, y, 0).Active;
-            bool backChunk  = chunk.Chunk.ChunkLeft.GetBlock(x, y, 15).Active;
+            
+            // Should draw faces? except chunk borders.
+            bool leftChunk  = !chunk.Chunk.ChunkLeft.GetSubChunk(subChunkId).GetBlock(15, y, z).Active;
+            bool rightChunk = !chunk.Chunk.ChunkRight.GetSubChunk(subChunkId).GetBlock(0, y, z).Active;
+            bool frontChunk = !chunk.Chunk.ChunkFront.GetSubChunk(subChunkId).GetBlock(x, y, 0).Active;
+            bool backChunk  = !chunk.Chunk.ChunkBack.GetSubChunk(subChunkId).GetBlock(x, y, 15).Active;
 
             // Check if there is a block in the above subchunk.
-            bool topChunk = false;
-            bool bottomChunk = false;
+            // Dont check if the subchunk is the bottom or top one.
+            bool topChunk = true;
+            bool bottomChunk = true;
             if (subChunkId != 15)
             {
                 SubChunk topSubChunk = chunk.Chunk.GetSubChunk(subChunkId + 1);
                 if (topSubChunk.isFull())
                     topChunk = true;
                 else
-                    topChunk = topSubChunk.GetBlock(x, 0, z).Active;
+                    topChunk = !topSubChunk.GetBlock(x, 0, z).Active;
             }
             if (subChunkId != 0)
             {
                 SubChunk botSubChunk = chunk.Chunk.GetSubChunk(subChunkId - 1);
                 if (botSubChunk.isFull())
-                    topChunk = true;
+                    bottomChunk = true;
                 else
-                    bottomChunk = botSubChunk.GetBlock(x, 15, z).Active;
+                    bottomChunk = !botSubChunk.GetBlock(x, 15, z).Active;
             }
 
             // False if should not render chunk border faces.
-            bool topBorder    = y == 15 ? chunk.RenderTop    && !topChunk    : top;
-            bool bottomBorder = y == 0  ? chunk.RenderBottom && !bottomChunk : bottom;
-            bool leftBorder   = x == 0  ? chunk.RenderLeft   && !leftChunk   : left;
-            bool rightBorder  = x == 15 ? chunk.RenderRight  && !rightChunk  : right;
-            bool frontBorder  = z == 15 ? chunk.RenderFront  && !frontChunk  : front;
-            bool backBorder   = z == 0  ? chunk.RenderBack   && !backChunk   : back;
+            bool topBorder    = y == 15 ? chunk.RenderTop    && topChunk    : top;
+            bool bottomBorder = y == 0  ? chunk.RenderBottom && bottomChunk : bottom;
+
+            bool leftBorder   = x == 0  ? chunk.RenderLeft   && leftChunk   : left;
+            bool rightBorder  = x == 15 ? chunk.RenderRight  && rightChunk  : right;
+            bool frontBorder  = z == 15 ? chunk.RenderFront  && frontChunk  : front;
+            bool backBorder   = z == 0  ? chunk.RenderBack   && backChunk   : back;
 
             // Display the chunk in green if chunk is surrounded.
-            CurrentColor = BlockPalette.GetColor(chunk.Chunk.ChunkLeft.GetBlock(x, y, z).Type);
-
+            CurrentColor = BlockPalette.GetColor(chunk.GetBlock(x,y,z).Type);
+            
             // Represent each faces of a cube and if it should place
             // each faces. Placed in the same order in CUBE_FACES enum.
             bool[] lutFaces = 
@@ -181,9 +186,7 @@ namespace VoxelEngine.engine
             {
                 // If the LUT returns true, create the face.
                 if (lutFaces[(int)face] == true)
-                {
                     CreateFace(face, position);
-                }
             }
         }
 

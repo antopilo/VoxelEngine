@@ -12,12 +12,12 @@ namespace VoxelEngine.Engine.World
     {
         private static Dictionary<BLOCK_TYPE, Color> m_Palette = new Dictionary<BLOCK_TYPE, Color>
         {
-            { BLOCK_TYPE.Stone, new Color(204, 204, 204) },
-            { BLOCK_TYPE.Dirt, new Color(137, 117, 85) },
-            { BLOCK_TYPE.Grass, new Color(131, 216, 82) },
-            { BLOCK_TYPE.Sand, new Color(255, 249, 99) },
-            { BLOCK_TYPE.Leaves, new Color(114, 252, 60) },
-            { BLOCK_TYPE.Trunk, new Color(114, 106, 53) },
+            { BLOCK_TYPE.Stone, new Color(204 / 255f, 204/ 255f, 204/ 255f) },
+            { BLOCK_TYPE.Dirt, new Color(137/ 255f, 117/ 255f, 85/ 255f) },
+            { BLOCK_TYPE.Grass, new Color(131/ 255f, 216/ 255f, 82/ 255f) },
+            { BLOCK_TYPE.Sand, new Color(255/ 255f, 249/ 255f, 99/ 255f) },
+            { BLOCK_TYPE.Leaves, new Color(114/ 255f, 252/ 255f, 60/ 255f) },
+            { BLOCK_TYPE.Trunk, new Color(114/ 255f, 106/ 255f, 53/ 255f) },
         };
 
         public static Color GetColor(BLOCK_TYPE type)

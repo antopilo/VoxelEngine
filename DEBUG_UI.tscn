@@ -1,0 +1,60 @@
+[gd_scene format=2]
+
+[node name="DEBUG_UI" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="HBoxContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+rect_min_size = Vector2( 0, 50 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="fps" type="Label" parent="HBoxContainer"]
+margin_right = 1024.0
+margin_bottom = 14.0
+size_flags_vertical = 5
+text = "FPS:"
+uppercase = true
+
+[node name="mem" type="Label" parent="HBoxContainer"]
+margin_top = 18.0
+margin_right = 1024.0
+margin_bottom = 32.0
+size_flags_vertical = 5
+text = "MEM:"
+uppercase = true
+
+[node name="loaded" type="Label" parent="HBoxContainer"]
+margin_top = 36.0
+margin_right = 1024.0
+margin_bottom = 50.0
+size_flags_vertical = 5
+text = "Loaded_chunk count:"
+uppercase = true
+
+[node name="x" type="Label" parent="HBoxContainer"]
+margin_top = 54.0
+margin_right = 1024.0
+margin_bottom = 68.0
+size_flags_vertical = 5
+text = "X:"
+uppercase = true
+
+[node name="y" type="Label" parent="HBoxContainer"]
+margin_top = 72.0
+margin_right = 1024.0
+margin_bottom = 86.0
+size_flags_vertical = 5
+text = "Y:"
+uppercase = true
+
+[node name="z" type="Label" parent="HBoxContainer"]
+margin_top = 90.0
+margin_right = 1024.0
+margin_bottom = 104.0
+size_flags_vertical = 5
+text = "Z:"
+uppercase = true
+

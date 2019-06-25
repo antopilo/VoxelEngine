@@ -21,6 +21,7 @@ public class ChunkManager
     // All Loaded chunks
     private static Dictionary<Vector2,Chunk> m_LoadedChunk = new Dictionary<Vector2, Chunk>();
 
+    public static Vector2 CameraPosition = new Vector2();
 
     public static void LoadThread()
     {
@@ -30,7 +31,8 @@ public class ChunkManager
             {
                 if (m_ChunkLoadList.Count > 0)
                 {
-                    foreach (var item in m_ChunkLoadList)
+                    int count = 0;
+                    foreach (var item in m_ChunkLoadList.OrderBy(c => DistanceToChunk(c)))
                     {
                         Vector2 newPosition = item;
 
@@ -40,10 +42,13 @@ public class ChunkManager
                         newChunk.ChunkSetup();
                         NoiseMaker.GenerateChunk(newChunk);
 
-                        newChunk.Update();
+                        m_ChunkLoadList.TryDequeue(out newChunk.Position);
                         AddToLoadedList(newChunk);
                         AddToPreloadedList(newChunk, newChunk.Position);
-                        m_ChunkLoadList.TryDequeue(out newChunk.Position);
+                        count++;
+
+                        if (count > 8)
+                            break;
                     }
 
                 }
@@ -65,22 +70,19 @@ public class ChunkManager
             {
                 foreach (var item in m_PreloadedChunks.Values)
                 {
-                    
+
                     var chunk = item;
                     chunk.Update();
+
                     if (chunk.isSurrounded)
                     {
                         AddToRenderList(chunk);
                         m_PreloadedChunks.TryRemove(chunk.Position, out chunk);
-
                     }
                 }
             }
         }
-        catch
-        {
-            
-        }
+        catch { }
         
     }
 
@@ -91,15 +93,15 @@ public class ChunkManager
         {
             try
             {
+                UpdatePreloaded();
+
                 if (m_RenderList.Count < 1)
                     continue;
 
-                UpdatePreloaded();
-
-                foreach (Chunk item in m_RenderList.Values)
+                foreach (Chunk item in m_RenderList.Values.OrderBy( c => DistanceToChunk(c.Position)))
                 {
                     Chunk chunk = item;
-
+                    
                     if (chunk.isSurrounded)
                     {
                         // Create mesh.
@@ -111,6 +113,8 @@ public class ChunkManager
                         // Remove from queue.
                         m_RenderList.TryRemove(chunk.Position, out chunk);
                     }
+                   
+                    
                 }
             }
             catch(Exception e)
@@ -119,6 +123,13 @@ public class ChunkManager
             }
         }
     }
+
+
+    public static float DistanceToChunk(Vector2 position)
+    {
+        return (position - CameraPosition).Length();
+    }
+
 
     // Returns true if a chunk all the chunk surrounding 
     // this one has been loaded(meaning that it's accesible).
@@ -132,6 +143,11 @@ public class ChunkManager
         return left && right && front && back;
     }
 
+    public static int GetLoadedCount()
+    {
+        return m_LoadedChunk.Count();
+    }
+
 
     public static void AddToPreloadedList(Chunk chunk, Vector2 position)
     {
@@ -142,16 +158,14 @@ public class ChunkManager
     public static void AddToLoadedList(Chunk chunk)
     {
         m_LoadedChunk.Add(chunk.Position, chunk);
-        
-        
     }
 
     // Adds a chunk to the loading chunk list.
     public static void AddLoadQueue(Vector2 position)
     {
-        if (m_ChunkLoadList.Contains(position))
+        if (m_ChunkLoadList.Contains(position) || m_LoadedChunk.ContainsKey(position))
         {
-            GD.Print("Warning: AddToLoadList->chunk already in list");
+            //GD.Print("Warning: AddToLoadList->chunk already in list");
             return;
         }
 

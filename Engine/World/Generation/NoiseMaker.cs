@@ -44,7 +44,8 @@ public class NoiseMaker
                 {
                     if (i > height - 5)
                         newBlock.Type = BLOCK_TYPE.Grass;
-                    chunk.AddBlock(new Vector3(x, i, z), new Block());
+
+                    chunk.AddBlock(new Vector3(x, i, z), newBlock);
                 }
                
             }
