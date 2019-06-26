@@ -93,6 +93,11 @@ public class Chunk : Spatial
         this.Translation = new Vector3(x, 0, z);
     }
 
+    internal void AddBlock(int x, int y, int z, BLOCK_TYPE newBlock)
+    {
+        throw new NotImplementedException();
+    }
+
 
     // Updates all the flags in each subchunks.
     public void Update()
