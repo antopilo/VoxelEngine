@@ -184,7 +184,9 @@ namespace VoxelEngine.engine
             bool backBorder   = z == 0  ? chunk.RenderBack   && backChunk   : back;
 
             // Display the chunk in green if chunk is surrounded.
-            CurrentColor = BlockPalette.GetColor((BLOCK_TYPE)chunk.GetBlock(x,y,z));
+            int gx = (int)(chunk.Chunk.Position.x * 16) + x;
+            int gz = (int)(chunk.Chunk.Position.y * 16) + z;
+            CurrentColor = BlockPalette.GetColor((BLOCK_TYPE)chunk.GetBlock(x,y,z),gx, gz);
             
             // Represent each faces of a cube and if it should place
             // each faces. Placed in the same order in CUBE_FACES enum.
@@ -200,17 +202,6 @@ namespace VoxelEngine.engine
                 if (lutFaces[i] == true)
                     CreateFace(i, position);
             }
-
-            // OLD CODE SUPER SLOW IDK WHY
-            // Iterating through each face and check if we should place
-            // or not a face of a cube in the LUT just declared before.
-            //
-            // foreach (CUBE_FACES face in Enum.GetValues(typeof(CUBE_FACES)))
-            // {
-            //        // If the LUT returns true, create the face.
-            //        if (lutFaces[(int)face] == true)
-            //            CreateFace((int)face, position);
-            // }
         }
 
 

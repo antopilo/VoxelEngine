@@ -26,10 +26,10 @@ public class NoiseMaker
         Rng.Randomize();
         
         Noise.Seed = Rng.RandiRange(0, 99999);
-        Noise.Octaves = 5;
-        Noise.Period = 64;
-        Noise.Persistence = 0.5f;
-        Noise.Lacunarity = 0.5f;
+        Noise.Octaves = 16;
+        Noise.Period = 256;
+        Noise.Persistence = 0.8f;
+        Noise.Lacunarity = 0.7f;
 
         Humidity.Seed = Rng.RandiRange(0, 99999);
         Humidity.Octaves = 5;
@@ -38,8 +38,8 @@ public class NoiseMaker
         Humidity.Lacunarity = 0.75f;
 
         Temperature.Seed = Rng.RandiRange(0, 99999);
-        Temperature.Octaves = 5;
-        Temperature.Period = 64;
+        Temperature.Octaves = 2;
+        Temperature.Period = 128;
         Temperature.Persistence = 0.6f;
         Temperature.Lacunarity = 0.75f;
     }
@@ -58,17 +58,15 @@ public class NoiseMaker
             {
                 int gx = x + offsetX;
                 int gz = z + offsetZ;
+                
+                float height = Mathf.Pow(GetHeight(gx, gz), 1.4f);
+                float final = Mathf.Clamp(height, 0, 255);
 
-                float height = GetHeight(gx, gz);
-
-                for (int i = 0; i < height; i++)
+                for (int i = 0; i < final; i++)
                 {
-                    if (i == height)
+                    if (i == final)
                         newBlock = BLOCK_TYPE.Grass;
-                    else if (i > height - 3)
-                        newBlock = BLOCK_TYPE.Dirt;
-                    else
-                        newBlock = BLOCK_TYPE.Stone;
+
                     chunk.AddBlock(new Vector3(x, i, z), newBlock);
                 }
             }
@@ -80,7 +78,7 @@ public class NoiseMaker
     {
         float biome = GetHumidity(x, z);
         float normalizedNoise = (Noise.GetNoise2d(x, z) + 1f) / 2;
-        return (normalizedNoise) * ((Chunk.CHUNK_SIZE * 16) / 5) * biome;
+        return (normalizedNoise) * ((Chunk.CHUNK_SIZE * 16) / 2);
     }
 
 
@@ -89,7 +87,7 @@ public class NoiseMaker
         return (Temperature.GetNoise2d(x, z) + 1f) / 2f;
     }
 
-    private static float GetHumidity(int x, int z)
+    public static float GetHumidity(int x, int z)
     {
         return (Humidity.GetNoise2d(x, z) + 1f) / 2f;
     }

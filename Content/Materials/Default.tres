@@ -2,5 +2,10 @@
 
 [resource]
 flags_vertex_lighting = true
+flags_use_point_size = true
 vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+params_diffuse_mode = 4
+params_specular_mode = 3
+params_point_size = 8.0
 
