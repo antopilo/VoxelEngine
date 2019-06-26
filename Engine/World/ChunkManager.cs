@@ -129,11 +129,22 @@ public class ChunkManager
 
                     if (chunk.isSurrounded)
                     {
-                        // Create mesh.
-                        chunk.Render();
+                        if (!Engine.Scene.HasNode(chunk.Position.ToString()))
+                        {
+
+                            // Create mesh.
+                            chunk.Render(true);
+
+                            Engine.Scene.CallDeferred("add_child", chunk);
+                        }
+                        else
+                        {
+                            chunk.Render(false);
+                        }
 
                         // Queues the instancing.
-                        Engine.Scene.CallDeferred("add_child", chunk);
+                        
+                            
 
                         Chunk n = null;
                         // Remove from queue.
@@ -220,6 +231,16 @@ public class ChunkManager
             return m_LoadedChunk[position];
         else
             throw new System.IndexOutOfRangeException("Attempted to get a non-loaded chunk at: " + position.ToString() + ".");
+    }
+
+    public static void UnloadChunk(Chunk chunk)
+    {
+        //chunk.Unload();
+        //if (m_LoadedChunk.ContainsKey(chunk.Position))
+        //    m_LoadedChunk.TryRemove(chunk.Position, out chunk);
+        //if (m_PreloadedChunks.ContainsKey(chunk.Position))
+        //    m_PreloadedChunks.TryRemove(chunk.Position, out chunk);
+        
     }
 }
 

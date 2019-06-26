@@ -19,7 +19,7 @@ public enum Threads
 
 public class Engine : Node
 {
-    public static int RenderDistance = 32;
+    public static int RenderDistance = 18;
     public static Node Scene { get; set; }
     private static int CamX = 0;
     private static int CamZ = 0;
@@ -59,6 +59,7 @@ public class Engine : Node
         Threads[0].Start();
         Threads[1].Start();
         Threads[2].Start();
+
         // 1- ChunkManager.Load();
         // 2- ChunkManager.UpdatePreloaded();
         // 3- ChunkManager.Render();
@@ -101,6 +102,8 @@ public class Engine : Node
         }
 
         ChunkManager.CameraPosition = new Vector2(CamX, CamZ);
+
+
 
     }
 }

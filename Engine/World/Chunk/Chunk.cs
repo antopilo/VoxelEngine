@@ -16,6 +16,7 @@ public class Chunk : Spatial
     public Vector2 Position = new Vector2();
     public bool isSurrounded = false;
     public bool Updated = false;
+    public bool Unloaded = true;
 
     private SubChunk[] m_SubChunks = new SubChunk[SUBCHUNK_COUNT];
     #region Neighbors 
@@ -67,6 +68,8 @@ public class Chunk : Spatial
 
     public void ChunkSetup()
     {
+        this.Name = Position.ToString();
+
         // Filling all subchunks
         for (int sc = 0; sc < SUBCHUNK_COUNT; sc++)
         {
@@ -149,6 +152,27 @@ public class Chunk : Spatial
     }
 
 
+    public override void _Process(float delta)
+    {
+        if (ChunkManager.DistanceToChunk(this.Position) > Engine.RenderDistance)
+        {
+            this.Visible = false;
+            //for (int i = 0; i < SUBCHUNK_COUNT; i++)
+            //{
+
+            //    //ChunkManager.UnloadChunk(this);
+            //}
+        }
+        else
+            this.Visible = true;
+    }
+
+    public void Unload()
+    {
+        this.CallDeferred("queue_free");
+    }
+
+
     // Gets a subchunk from an index.
     public SubChunk GetSubChunk(int idx)
     {
@@ -189,30 +213,39 @@ public class Chunk : Spatial
 
 
     // Renders all the chunk, including the subchunks.
-    public void Render()
+    public void Render(bool first)
     {
-        var visibilityNotifier = new VisibilityNotifier();
-        var size = new Vector3(CHUNK_SIZE, CHUNK_SIZE * SUBCHUNK_COUNT, CHUNK_SIZE);
-        visibilityNotifier.Aabb = new AABB(new Vector3(), size);
-        this.AddChild(visibilityNotifier);
-        for (int i = 0; i < SUBCHUNK_COUNT; i++)
+        if (first)
         {
-            var subChunk = m_SubChunks[i];
-            subChunk.Name = i.ToString();
-            subChunk.Translate(new Vector3(0, i * CHUNK_SIZE, 0));
-            subChunk.Mesh = Renderer.Render(subChunk);
+            var visibilityNotifier = new VisibilityNotifier();
+            var size = new Vector3(CHUNK_SIZE, CHUNK_SIZE * SUBCHUNK_COUNT, CHUNK_SIZE);
+            visibilityNotifier.Aabb = new AABB(new Vector3(), size);
+            this.AddChild(visibilityNotifier);
+            for (int i = 0; i < SUBCHUNK_COUNT; i++)
+            {
+                var subChunk = m_SubChunks[i];
+                subChunk.Name = i.ToString();
+                subChunk.Translate(new Vector3(0, i * CHUNK_SIZE, 0));
+                subChunk.Mesh = Renderer.Render(subChunk);
 
-            this.CallDeferred("add_child", subChunk);
+                this.CallDeferred("add_child", subChunk);
 
-            // Creating a visibility notifier per chunk.
-            // This is useful for the frustrum culling.
-            // Connect the signals to the methods on the subchunk.
-            visibilityNotifier.Connect("camera_entered", subChunk, "CameraEntered", null, 1);
-            visibilityNotifier.Connect("camera_exited", subChunk, "CameraExited", null, 1);
+                // Creating a visibility notifier per chunk.
+                // This is useful for the frustrum culling.
+                // Connect the signals to the methods on the subchunk.
+                visibilityNotifier.Connect("camera_entered", subChunk, "CameraEntered", null, 1);
+                visibilityNotifier.Connect("camera_exited", subChunk, "CameraExited", null, 1);
+            }
         }
-           
+        else
+        {
+            for (int i = 0; i < SUBCHUNK_COUNT; i++)
+            {
+                var subChunk = m_SubChunks[i];
+                subChunk.Mesh = Renderer.Render(subChunk);
+            }
+        }
 
-            
     }
 
 
