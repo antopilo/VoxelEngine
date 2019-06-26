@@ -8,7 +8,7 @@ namespace VoxelEngine.engine.World
 {
     public enum BLOCK_TYPE
     {
-        Stone, Dirt, Grass, Sand, Leaves, Trunk
+        Empty = -1,Stone, Dirt, Grass, Sand, Leaves, Trunk
     }
 
     public class Block

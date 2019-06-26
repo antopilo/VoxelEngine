@@ -9,7 +9,7 @@
 
 [node name="CameraInGame" type="Camera" parent="."]
 transform = Transform( 0.707107, 0.5, -0.5, 0, 0.707107, 0.707107, 0.707107, -0.5, 0.5, 0, 60, 0 )
-far = 1067.5
+far = 638.3
 script = ExtResource( 2 )
 smoothness = 0.378
 collisions = false
@@ -17,6 +17,5 @@ max_speed = Vector3( 100, 100, 100 )
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 0.874472, 0.404355, -0.267949, 0, 0.552385, 0.833589, 0.485077, -0.72895, 0.483045, 0, 0, 0 )
-visible = false
 light_energy = 0.52
 

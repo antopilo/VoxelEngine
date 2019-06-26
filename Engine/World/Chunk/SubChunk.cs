@@ -18,7 +18,7 @@ namespace VoxelEngine.Engine.World
         public bool RenderFront = true;
         public bool RenderBack = true;
 
-        private Block[,,] m_Blocks = new Block[16, 16, 16];
+        private int[,,] m_Blocks = new int[16, 16, 16];
 
         // Total count of block on each faces.
         private int m_topCount = 0;
@@ -30,22 +30,16 @@ namespace VoxelEngine.Engine.World
 
         public void Fill(bool filled)
         {
-            var block = new Block
-            {
-                Active = false
-            };
-
-            if (filled)
+            if (!filled)
             {
                 BlockCount = (int)Math.Pow(Chunk.CHUNK_SIZE, 3);
-                block.Active = true;
             }
 
             for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                 for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                     for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                     {
-                        m_Blocks[x, y, z] = block;
+                        m_Blocks[x, y, z] = -1;
                     }
         }
 
@@ -97,7 +91,7 @@ namespace VoxelEngine.Engine.World
         }
 
         // Returns the data in this sub-chunk.
-        public Block[,,] GetData()
+        public int[,,] GetData()
         {
             return m_Blocks;
         }
@@ -109,20 +103,20 @@ namespace VoxelEngine.Engine.World
         }
 
        
-        public Block GetBlock(int x, int y, int z)
+        public int GetBlock(int x, int y, int z)
         {
             return m_Blocks[x, y, z];
         }
 
         // Adds a block in this subchunk.
-        public void AddBlock(Vector3 position, Block block)
+        public void AddBlock(Vector3 position, BLOCK_TYPE block)
         {
             int x = (int)position.x;
             int y = (int)position.y;
             int z = (int)position.z;
        
             // If we are adding an empty block, just remove it.
-            if (block.Active == false)
+            if ((int)block == -1)
             {
                 RemoveBlock(position);
                 return;
@@ -144,7 +138,7 @@ namespace VoxelEngine.Engine.World
 
             
             // Sets the block and update the total count.
-            m_Blocks[x, y, z] = block;
+            m_Blocks[x, y, z] = (int)block;
             BlockCount++;
         }
 
@@ -169,26 +163,23 @@ namespace VoxelEngine.Engine.World
             if (z == 0)
                 m_backCount--;
 
-            // If null add one.
-            if (m_Blocks[x, y, z] is null)
-                m_Blocks[x, y, z] = new Block();
 
             // Remove it and decrease the count.
-            m_Blocks[x, y, z].Active = false;
+            m_Blocks[x, y, z] = -1;
             BlockCount--;
         }
 
         // Signals for frustrum culling
         public void CameraEntered(Camera camera)
         {
-            //if (camera.Name == "CameraInGame")
-            //    this.Visible = true;
+            if (camera.Name == "CameraInGame")
+                this.Visible = true;
         }
 
         public void CameraExited(Camera camera)
         {
-            //if (camera.Name == "CameraInGame")
-            //    this.Visible = false;
+            if (camera.Name == "CameraInGame")
+               this.Visible = false;
         }
     }
 }

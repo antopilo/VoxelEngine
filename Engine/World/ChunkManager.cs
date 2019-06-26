@@ -14,39 +14,74 @@ using System.Linq;
 public class ChunkManager
 {
     // Load queue.
-    private static Queue<Vector2> m_ChunkLoadList = new Queue<Vector2>();
+    private static ConcurrentQueue<Vector2> m_ChunkLoadList = new ConcurrentQueue<Vector2>();
 
     // Loaded chunk.
-    private static Dictionary<Vector2, Chunk> m_PreloadedChunks = new Dictionary<Vector2, Chunk>();
+    private static ConcurrentDictionary<Vector2, Chunk> m_PreloadedChunks = new ConcurrentDictionary<Vector2, Chunk>();
 
     // Render queue.
-    private static Dictionary<Vector2, Chunk> m_RenderList = new Dictionary<Vector2, Chunk>();
+    private static ConcurrentDictionary<Vector2, Chunk> m_RenderList = new ConcurrentDictionary<Vector2, Chunk>();
 
     // All Loaded chunks
-    private static Dictionary<Vector2,Chunk> m_LoadedChunk = new Dictionary<Vector2, Chunk>();
+    private static ConcurrentDictionary<Vector2,Chunk> m_LoadedChunk = new ConcurrentDictionary<Vector2, Chunk>();
 
     public static Vector2 CameraPosition = new Vector2();
+    public static Camera Camera;
 
     public static void Load()
-    {     
-        foreach (var item in m_ChunkLoadList.ToArray())
+    {
+        while (true)
         {
-            var timeStart = DateTime.Now;
+            try
+            {
+                for (int x = (int)CameraPosition.x - Engine.RenderDistance; x < (int)CameraPosition.x + Engine.RenderDistance; x++)
+                {
+                    for (int z = (int)CameraPosition.y - Engine.RenderDistance; z < (int)CameraPosition.y + Engine.RenderDistance; z++)
+                    {
+                        var currentPosition = new Vector2(x, z);
+                        if ((CameraPosition - currentPosition).Length() < Engine.RenderDistance 
+                            && ShouldRenderChunk(currentPosition))
+                            AddLoadQueue(currentPosition);
+                        
+                    }
+                }
 
-            Vector2 newPosition = m_ChunkLoadList.Dequeue(); ;
+                int count = 0;
+                foreach (var item in m_ChunkLoadList)
+                {
+                    if (count > 2)
+                    {
+                        //UpdatePreloaded();
+                        break;
+                    }
 
-            var newChunk = new Chunk();
-            newChunk.SetPosition(newPosition);
+                    //var timeStart = DateTime.Now;
+                    Vector2 newPosition;
+                    bool result = m_ChunkLoadList.TryDequeue(out newPosition); ;
 
-            newChunk.ChunkSetup();
-            NoiseMaker.GenerateChunk(newChunk);
+                    if (result)
+                    {
+                        var newChunk = new Chunk();
+                        newChunk.SetPosition(newPosition);
 
+                        newChunk.ChunkSetup();
+                        NoiseMaker.GenerateChunk(newChunk);
+
+
+                        AddToLoadedList(newChunk);
+                        AddToPreloadedList(newChunk, newChunk.Position);
+
+                        //var timeEnd = DateTime.Now;
+                        //GD.Print("Loading took:", (timeEnd - timeStart).TotalMilliseconds.ToString(), "ms");
+                        count++;
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                GD.Print(e.ToString());
+            }
             
-            AddToLoadedList(newChunk);
-            AddToPreloadedList(newChunk, newChunk.Position);
-
-            var timeEnd = DateTime.Now;
-            GD.Print("Loading took:",(timeEnd - timeStart).TotalMilliseconds.ToString(),"ms");
         }
     }
 
@@ -54,40 +89,64 @@ public class ChunkManager
     // Update current preloaded chunk. 
     public static void UpdatePreloaded()
     {
-        foreach (var item in m_PreloadedChunks.ToArray())
+        while (true)
         {
-            var chunk = item.Value;
-            chunk.Update();
-
-            if (chunk.isSurrounded)
+            try
             {
-                AddToRenderList(chunk);
-                m_PreloadedChunks.Remove(chunk.Position);
+                for (int i = 0; i < m_PreloadedChunks.Count; i++)
+                {
+                    var chunk = m_PreloadedChunks.ElementAt(i).Value;
+
+                    if (chunk.Updated == false)
+                        chunk.Update();
+
+                    Chunk n = null;
+                    if (chunk.isSurrounded)
+                    {
+                        AddToRenderList(chunk);
+                        m_PreloadedChunks.TryRemove(chunk.Position, out n);
+                    }
+                }
             }
+            catch { }
         }
     }
 
     // Async rendering thread.
     public static void Render()
     {
-        foreach (Chunk item in m_RenderList.Values.ToArray())
+        while (true)
         {
-            var timeStart = DateTime.Now;
-            Chunk chunk = item;
-                    
-            if (chunk.isSurrounded)
+            try
             {
-                // Create mesh.
-                chunk.Render();
+                if (m_RenderList.Count <= 1)
+                    continue;
 
-                // Queues the instancing.
-                Engine.Scene.CallDeferred("add_child", chunk);
+                foreach (Chunk item in m_RenderList.Values)
+                {
+                    //var timeStart = DateTime.Now;
+                    Chunk chunk = item;
 
-                // Remove from queue.
-                m_RenderList.Remove(chunk.Position);
-                var timeEnd = DateTime.Now;
-                GD.Print("Meshing took:",(timeEnd - timeStart).TotalMilliseconds.ToString(), "ms");
-            }        
+                    if (chunk.isSurrounded)
+                    {
+                        // Create mesh.
+                        chunk.Render();
+
+                        // Queues the instancing.
+                        Engine.Scene.CallDeferred("add_child", chunk);
+
+                        Chunk n = null;
+                        // Remove from queue.
+                        m_RenderList.TryRemove(chunk.Position, out n);
+                       // var timeEnd = DateTime.Now;
+                        //GD.Print("Meshing took:", (timeEnd - timeStart).TotalMilliseconds.ToString(), "ms");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                GD.Print(e.ToString());
+            }
         }
     }
 
@@ -95,6 +154,15 @@ public class ChunkManager
     public static float DistanceToChunk(Vector2 position)
     {
         return (position - CameraPosition).Length();
+    }
+
+    public static bool ShouldRenderChunk(Vector2 chunkPosition)
+    {
+        Vector3 result = new Vector3(chunkPosition.x * 16, Camera.GlobalTransform.origin.y - 16f, chunkPosition.y * 16);
+        Vector2 position = Camera.UnprojectPosition(result);
+        if (Camera.IsPositionBehind(result) || position.x < 0 || position.x > 800 || position.y < 0 || position.y > 600)
+            return false;
+        return true;
     }
 
 
@@ -107,6 +175,7 @@ public class ChunkManager
         right = m_LoadedChunk.ContainsKey(position + new Vector2(1, 0));
         front = m_LoadedChunk.ContainsKey(position + new Vector2(0, -1));
         back = m_LoadedChunk.ContainsKey(position + new Vector2(0, 1));
+
         return left && right && front && back;
     }
 
@@ -118,13 +187,13 @@ public class ChunkManager
 
     public static void AddToPreloadedList(Chunk chunk, Vector2 position)
     {
-        m_PreloadedChunks.Add(position, chunk);
+        m_PreloadedChunks.TryAdd(position, chunk);
     }
 
     // Adds a chunk to the loaded chunk list.
     public static void AddToLoadedList(Chunk chunk)
     {
-        m_LoadedChunk.Add(chunk.Position, chunk);
+        m_LoadedChunk.TryAdd(chunk.Position, chunk);
     }
 
     // Adds a chunk to the loading chunk list.
@@ -141,7 +210,7 @@ public class ChunkManager
     // Adds a chunk to the render chunk list.
     public static void AddToRenderList(Chunk chunk)
     {
-        m_RenderList.Add(chunk.Position, chunk);
+        m_RenderList.TryAdd(chunk.Position, chunk);
     }
 
     // Gets a chunk

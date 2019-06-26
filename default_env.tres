@@ -3,9 +3,9 @@
 [sub_resource type="ProceduralSky" id=1]
 
 [resource]
-background_mode = 1
+background_mode = 2
 background_sky = SubResource( 1 )
-ambient_light_color = Color( 1, 1, 0.886275, 1 )
+ambient_light_color = Color( 1, 1, 0.513726, 1 )
 fog_color = Color( 0.411765, 0.819608, 1, 1 )
 fog_depth_begin = 105.2
 fog_depth_end = 435.4

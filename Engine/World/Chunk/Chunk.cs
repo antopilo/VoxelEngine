@@ -15,9 +15,9 @@ public class Chunk : Spatial
 
     public Vector2 Position = new Vector2();
     public bool isSurrounded = false;
+    public bool Updated = false;
 
     private SubChunk[] m_SubChunks = new SubChunk[SUBCHUNK_COUNT];
-
     #region Neighbors 
     public Chunk ChunkLeft
     {
@@ -72,14 +72,11 @@ public class Chunk : Spatial
         {
             m_SubChunks[sc] = new SubChunk();
             m_SubChunks[sc].SubChunkId = sc;
-            m_SubChunks[sc].Fill(false);
+            m_SubChunks[sc].Fill(true);
             m_SubChunks[sc].Chunk = this;
         }
 
-        var defaultBlock = new Block();
-        defaultBlock.Active = false;   
 
-        Update();
     }
 
 
@@ -136,8 +133,12 @@ public class Chunk : Spatial
                     subChunk.RenderBack = false;
                 else
                     subChunk.RenderBack = true;
+                
             }
         }
+        if(isSurrounded)
+            Updated = true;
+
     }
 
 
@@ -156,7 +157,7 @@ public class Chunk : Spatial
 
 
     // Returns a block from global position
-    public Block GetBlock(Vector3 position)
+    public int GetBlock(Vector3 position)
     {
         int x = (int)position.x;
         int y = (int)position.y;
@@ -168,7 +169,7 @@ public class Chunk : Spatial
 
 
     // Returns a block from global position
-    public Block GetBlock(int x, int y, int z)
+    public int GetBlock(int x, int y, int z)
     {
         int subChunkIndex = GetSubChunkIdFromHeight(y);
         int subChunkHeight = y - (CHUNK_SIZE * (subChunkIndex));
@@ -177,18 +178,23 @@ public class Chunk : Spatial
 
 
     // Adds a block into a subchunk from global position.
-    public void AddBlock(Vector3 position, Block block)
+    public void AddBlock(Vector3 position, BLOCK_TYPE block)
     {
         int subChunkIndex = GetSubChunkIdFromHeight((int)position.y);
         int subChunkHeight = (int)position.y - ((int)CHUNK_SIZE * (subChunkIndex));
         var localPosition = new Vector3(position.x, subChunkHeight, position.z);
         m_SubChunks[subChunkIndex].AddBlock(localPosition, block);
+        Updated = false;
     }
 
 
     // Renders all the chunk, including the subchunks.
     public void Render()
     {
+        var visibilityNotifier = new VisibilityNotifier();
+        var size = new Vector3(CHUNK_SIZE, CHUNK_SIZE * SUBCHUNK_COUNT, CHUNK_SIZE);
+        visibilityNotifier.Aabb = new AABB(new Vector3(), size);
+        this.AddChild(visibilityNotifier);
         for (int i = 0; i < SUBCHUNK_COUNT; i++)
         {
             var subChunk = m_SubChunks[i];
@@ -200,16 +206,13 @@ public class Chunk : Spatial
 
             // Creating a visibility notifier per chunk.
             // This is useful for the frustrum culling.
-            var visibilityNotifier = new VisibilityNotifier();
-            var size = new Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE);
-            visibilityNotifier.Aabb = new AABB(new Vector3(), size);
-            subChunk.AddChild(visibilityNotifier);
-
             // Connect the signals to the methods on the subchunk.
             visibilityNotifier.Connect("camera_entered", subChunk, "CameraEntered", null, 1);
             visibilityNotifier.Connect("camera_exited", subChunk, "CameraExited", null, 1);
-                
         }
+           
+
+            
     }
 
 

@@ -19,6 +19,7 @@ public enum Threads
 
 public class Engine : Node
 {
+    public static int RenderDistance = 32;
     public static Node Scene { get; set; }
     private static int CamX = 0;
     private static int CamZ = 0;
@@ -36,25 +37,41 @@ public class Engine : Node
     private Label FPS, Mem, LoadedCount, x, y, z;
 
     private Camera Camera;
+    private Thread[] Threads = new Thread[3];
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
         LoadReference();
 
+        NoiseMaker.Initialize();
+
         var startTime = DateTime.Now;
-        ChunkManager.Load();
 
-        ChunkManager.UpdatePreloaded();
+        var threadStart1 = new ThreadStart(ChunkManager.Load);
+        var threadStart2 = new ThreadStart(ChunkManager.Render);
+        var threadStart3 = new ThreadStart(ChunkManager.UpdatePreloaded);
 
-        ChunkManager.Render();
-        GD.Print("TotalTime: ", (DateTime.Now - startTime).TotalMilliseconds.ToString());
+        Threads[0] = new Thread(threadStart1);
+        Threads[1] = new Thread(threadStart2);
+        Threads[2] = new Thread(threadStart3);
+
+        Threads[0].Start();
+        Threads[1].Start();
+        Threads[2].Start();
+        // 1- ChunkManager.Load();
+        // 2- ChunkManager.UpdatePreloaded();
+        // 3- ChunkManager.Render();
+
+        //GD.Print("TotalTime: ", (DateTime.Now - startTime).TotalMilliseconds.ToString());
     }
 
     public void LoadReference()
     {
         Scene = GetTree().CurrentScene;
         Camera = (Camera)Scene.GetNode("CameraInGame");
+
+        ChunkManager.Camera = Camera;
 
         if (m_Debug)
         {
@@ -65,14 +82,6 @@ public class Engine : Node
             x = (Label)UI.GetNode("x");
             y = (Label)UI.GetNode("y");
             z = (Label)UI.GetNode("z");
-        }
-
-        for (int x = 0; x < 16; x++)
-        {
-            for (int z = 0; z < 16; z++)
-            {
-                ChunkManager.AddLoadQueue(new Vector2(x, z));
-            }
         }
     }
 
@@ -92,6 +101,7 @@ public class Engine : Node
         }
 
         ChunkManager.CameraPosition = new Vector2(CamX, CamZ);
+
     }
 }
 
