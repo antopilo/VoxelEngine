@@ -13,8 +13,7 @@ public class NoiseMaker
 
     public static void Initialize()
     {
-        Rng.Randomize();
-        Noise.Seed = Rng.Seed;
+        Noise.Seed = 12345;
 
         Noise.Octaves = 4;
         Noise.Period = 512;

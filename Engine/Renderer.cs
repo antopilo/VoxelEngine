@@ -42,17 +42,17 @@ namespace VoxelEngine.engine
             new Vector3(0, 0, 1), new Vector3(0, 0, -1)
         };
 
-
         private static Color CurrentColor = new Color();
-        private static List<Vector3> Vertices = new List<Vector3>();
-        private static List<Vector3> Normals = new List<Vector3>();
-        private static List<Color> Colors = new List<Color>();
+
+        private static Vector3[] Vertices;
+        private static Vector3[] Normals;
+        private static Color[] Colors;
+
+        private static int vertexIdx = 0;
 
         // Creates a cube using an array.
         public static ArrayMesh Render(SubChunk chunk)
         {
-            
-            
             var arrayMesh = new ArrayMesh();
 
             // Array containing other arrays.
@@ -61,9 +61,11 @@ namespace VoxelEngine.engine
             arrays.Resize((int)ArrayMesh.ArrayType.Max);
 
             // Reset data.
-            Vertices = new List<Vector3>();
-            Normals = new List<Vector3>();
-            Colors = new List<Color>();
+            Vertices = new Vector3[9999];
+            Normals = new Vector3[9999];
+            Colors = new Color[9999];
+
+            vertexIdx = 0;
 
             if (chunk.isEmpty())
                 return null;
@@ -80,10 +82,29 @@ namespace VoxelEngine.engine
             {
                 for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                 {
-                    for (int y  = 0; y < Chunk.CHUNK_SIZE; y++)
+                    for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                     {
                         // No cube if not active.
                         if (chunk.GetBlock(x, y, z).Active == false)
+                            continue;
+
+                        if (x == 0 && !chunk.RenderLeft)
+                        {
+                            x++;
+                            continue;
+                        }
+                            
+                        if (y == 0 && !chunk.RenderBottom)
+                            continue;
+                        if (y == 15 && !chunk.RenderTop)
+                            continue;
+
+                        if (z == 0 && !chunk.RenderBack)
+                        {
+                            z++;
+                            continue;
+                        }
+                        if (z == 15 && !chunk.RenderFront)
                             continue;
 
                         // Create cube.
@@ -92,13 +113,14 @@ namespace VoxelEngine.engine
                 }   
             }
 
-            if (Vertices.Count == 0)
-                return null;
+            System.Array.Resize(ref Vertices, vertexIdx);
+            System.Array.Resize(ref Normals, vertexIdx);
+            System.Array.Resize(ref Colors, vertexIdx);
 
             // Fill the array with the others arrays.
-            arrays[(int)ArrayMesh.ArrayType.Vertex] = Vertices.ToArray();
-            arrays[(int)ArrayMesh.ArrayType.Normal] = Normals.ToArray();
-            arrays[(int)ArrayMesh.ArrayType.Color] = Colors.ToArray();
+            arrays[0] = Vertices;
+            arrays[1] = Normals;
+            arrays[3] = Colors;
 
             // Create surface from arrays.
             arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
@@ -131,12 +153,21 @@ namespace VoxelEngine.engine
             // If the block is completly surrounded(not seen).
             if (left && right && top && bottom && front && back)
                 return;
-            
+
             // Should draw faces? except chunk borders.
-            bool leftChunk  = !chunk.Chunk.ChunkLeft.GetSubChunk(subChunkId).GetBlock(15, y, z).Active;
-            bool rightChunk = !chunk.Chunk.ChunkRight.GetSubChunk(subChunkId).GetBlock(0, y, z).Active;
-            bool frontChunk = !chunk.Chunk.ChunkFront.GetSubChunk(subChunkId).GetBlock(x, y, 0).Active;
-            bool backChunk  = !chunk.Chunk.ChunkBack.GetSubChunk(subChunkId).GetBlock(x, y, 15).Active;
+            bool leftChunk = true;
+            bool rightChunk = true;
+            bool backChunk = true;
+            bool frontChunk = true;
+            
+            if(x == 0)
+                leftChunk  = !chunk.Chunk.ChunkLeft.GetSubChunk(subChunkId).GetBlock(15, y, z).Active;
+            if(x == 15)
+                rightChunk = !chunk.Chunk.ChunkRight.GetSubChunk(subChunkId).GetBlock(0, y, z).Active;
+            if(z == 0)
+                backChunk  = !chunk.Chunk.ChunkBack.GetSubChunk(subChunkId).GetBlock(x, y, 15).Active;
+            if(z == 15)
+                frontChunk = !chunk.Chunk.ChunkFront.GetSubChunk(subChunkId).GetBlock(x, y, 0).Active;
 
             // Check if there is a block in the above subchunk.
             // Dont check if the subchunk is the bottom or top one.
@@ -186,63 +217,63 @@ namespace VoxelEngine.engine
             {
                 // If the LUT returns true, create the face.
                 if (lutFaces[(int)face] == true)
-                    CreateFace(face, position);
+                    CreateFace((int)face, position);
             }
         }
 
 
         // Create a face at position.
-        private static void CreateFace(CUBE_FACES face, Vector3 position)
+        private static void CreateFace(int face, Vector3 position)
         {
             switch (face)
             {
-                case CUBE_FACES.Top:
-                    AddVertex(position, 4, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 5, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 7, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 5, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 6, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 7, CUBE_NORMALS[(int)face]);
+                case (int)CUBE_FACES.Top:
+                    AddVertex(position, 4, CUBE_NORMALS[face]);
+                    AddVertex(position, 5, CUBE_NORMALS[face]);
+                    AddVertex(position, 7, CUBE_NORMALS[face]);
+                    AddVertex(position, 5, CUBE_NORMALS[face]);
+                    AddVertex(position, 6, CUBE_NORMALS[face]);
+                    AddVertex(position, 7, CUBE_NORMALS[face]);
                     break;
-                case CUBE_FACES.Bottom:
-                    AddVertex(position, 1, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 3, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 2, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 1, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 0, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 3, CUBE_NORMALS[(int)face]);
+                case (int)CUBE_FACES.Bottom:
+                    AddVertex(position, 1, CUBE_NORMALS[face]);
+                    AddVertex(position, 3, CUBE_NORMALS[face]);
+                    AddVertex(position, 2, CUBE_NORMALS[face]);
+                    AddVertex(position, 1, CUBE_NORMALS[face]);
+                    AddVertex(position, 0, CUBE_NORMALS[face]);
+                    AddVertex(position, 3, CUBE_NORMALS[face]);
                     break;
-                case CUBE_FACES.Left:
-                    AddVertex(position, 0, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 7, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 3, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 0, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 4, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 7, CUBE_NORMALS[(int)face]);
+                case (int)CUBE_FACES.Left:
+                    AddVertex(position, 0, CUBE_NORMALS[face]);
+                    AddVertex(position, 7, CUBE_NORMALS[face]);
+                    AddVertex(position, 3, CUBE_NORMALS[face]);
+                    AddVertex(position, 0, CUBE_NORMALS[face]);
+                    AddVertex(position, 4, CUBE_NORMALS[face]);
+                    AddVertex(position, 7, CUBE_NORMALS[face]);
                     break;
-                case CUBE_FACES.Right:
-                    AddVertex(position, 2, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 5, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 1, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 2, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 6, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 5, CUBE_NORMALS[(int)face]);
+                case (int)CUBE_FACES.Right:
+                    AddVertex(position, 2, CUBE_NORMALS[face]);
+                    AddVertex(position, 5, CUBE_NORMALS[face]);
+                    AddVertex(position, 1, CUBE_NORMALS[face]);
+                    AddVertex(position, 2, CUBE_NORMALS[face]);
+                    AddVertex(position, 6, CUBE_NORMALS[face]);
+                    AddVertex(position, 5, CUBE_NORMALS[face]);
                     break;
-                case CUBE_FACES.Front:
-                    AddVertex(position, 3, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 6, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 2, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 3, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 7, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 6, CUBE_NORMALS[(int)face]);
+                case (int)CUBE_FACES.Front:
+                    AddVertex(position, 3, CUBE_NORMALS[face]);
+                    AddVertex(position, 6, CUBE_NORMALS[face]);
+                    AddVertex(position, 2, CUBE_NORMALS[face]);
+                    AddVertex(position, 3, CUBE_NORMALS[face]);
+                    AddVertex(position, 7, CUBE_NORMALS[face]);
+                    AddVertex(position, 6, CUBE_NORMALS[face]);
                     break;
-                case CUBE_FACES.Back:
-                    AddVertex(position, 0, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 1, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 5, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 5, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 4, CUBE_NORMALS[(int)face]);
-                    AddVertex(position, 0, CUBE_NORMALS[(int)face]);
+                case (int)CUBE_FACES.Back:
+                    AddVertex(position, 0, CUBE_NORMALS[face]);
+                    AddVertex(position, 1, CUBE_NORMALS[face]);
+                    AddVertex(position, 5, CUBE_NORMALS[face]);
+                    AddVertex(position, 5, CUBE_NORMALS[face]);
+                    AddVertex(position, 4, CUBE_NORMALS[face]);
+                    AddVertex(position, 0, CUBE_NORMALS[face]);
                     break;
             }
         }
@@ -250,9 +281,11 @@ namespace VoxelEngine.engine
 
         private static void AddVertex(Vector3 position, int idx, Vector3 normal)
         {
-            Vertices.Add(position + CUBE_VERTICES[idx]);
-            Normals.Add(normal);
-            Colors.Add(CurrentColor);
+            Vertices[vertexIdx] = position + CUBE_VERTICES[idx];
+            Normals[vertexIdx] = normal;
+            Colors[vertexIdx] = CurrentColor;
+
+            vertexIdx++;
         }
 
         // Apply the default material on each surface

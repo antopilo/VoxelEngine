@@ -23,6 +23,14 @@ config/icon="res://icon.png"
 
 Engine="*res://Engine/Engine.cs"
 
+[display]
+
+window/size/width=800
+window/size/resizable=false
+window/size/test_width=800
+window/size/test_height=600
+window/vsync/use_vsync=false
+
 [input]
 
 ui_left={
