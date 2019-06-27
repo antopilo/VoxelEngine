@@ -19,6 +19,7 @@ public class Chunk : Spatial
     public bool Unloaded = true;
 
     private SubChunk[] m_SubChunks = new SubChunk[SUBCHUNK_COUNT];
+
     #region Neighbors 
     public Chunk ChunkLeft
     {
@@ -64,7 +65,6 @@ public class Chunk : Spatial
         }
     }
     #endregion
-
 
     public void ChunkSetup()
     {
@@ -216,6 +216,18 @@ public class Chunk : Spatial
         Updated = false;
     }
 
+    public void AddSprite(Vector3 position, Models model)
+    {
+        var mesh = ModelLoader.GetModel(model);
+       
+        int subChunkIndex = GetSubChunkIdFromHeight((int)position.y);
+        int subChunkHeight = (int)position.y - ((int)CHUNK_SIZE * (subChunkIndex));
+        var localPosition = new Vector3(position.x, subChunkHeight, position.z);
+        var sprite = new VoxelSprite(mesh, localPosition);
+        m_SubChunks[subChunkIndex].AddDecoration(sprite);
+
+    }
+
 
     // Renders all the chunk, including the subchunks.
     public void Render(bool first)
@@ -232,6 +244,22 @@ public class Chunk : Spatial
                 subChunk.Name = i.ToString();
                 subChunk.Translate(new Vector3(0, i * CHUNK_SIZE, 0));
                 subChunk.Mesh = Renderer.Render(subChunk);
+
+                foreach (VoxelSprite voxelSprite in subChunk.GetDecorations())
+                {
+                    if (voxelSprite is null)
+                        continue;
+
+                    var newMesh = new MeshInstance();
+                    newMesh.Scale = new Vector3(1f / 8f, 1f / 8f, 1f / 8f);
+                    newMesh.SetRotationDegrees(new Vector3(0, NoiseMaker.Rng.RandfRange(0, 360), 0));
+                    newMesh.AddToGroup("decoration");
+
+                    newMesh.SetDeferred("translation", voxelSprite.Position);
+                    newMesh.Mesh = voxelSprite.Mesh;
+
+                    subChunk.CallDeferred("add_child", newMesh);
+                }
 
                 this.CallDeferred("add_child", subChunk);
 

@@ -19,6 +19,9 @@ namespace VoxelEngine.Engine.World
         public bool RenderBack = true;
 
         private int[,,] m_Blocks = new int[16, 16, 16];
+        private VoxelSprite[] m_Decoration = new VoxelSprite[64];
+
+        private int m_DecorationCount = 0;
 
         // Total count of block on each faces.
         private int m_topCount = 0;
@@ -46,8 +49,7 @@ namespace VoxelEngine.Engine.World
 
         public int BlockCount { get; private set; } = 0;
 
-
-
+       
         // Whole chunk is full or empty
         public bool isFull()
         {
@@ -95,6 +97,21 @@ namespace VoxelEngine.Engine.World
         {
             return m_Blocks;
         }
+
+        public VoxelSprite[] GetDecorations()
+        {
+            return m_Decoration;
+        }
+
+        public void AddDecoration(VoxelSprite sprite)
+        {
+            if (m_DecorationCount == m_Decoration.Length)
+                return;
+
+            m_Decoration[m_DecorationCount] = sprite;
+            m_DecorationCount++;
+        }
+
 
         // The parent of this subchunk. All chunks have 16 subchunks.
         public Chunk Chunk

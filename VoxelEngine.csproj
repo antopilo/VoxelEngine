@@ -56,9 +56,14 @@
     <Compile Include="Engine\Renderer.cs" />
     <Compile Include="Engine\World\ChunkManager.cs" />
     <Compile Include="Engine\World\Chunk\SubChunk.cs" />
+    <Compile Include="Engine\World\Generation\ModelLoader.cs" />
     <Compile Include="Engine\World\Generation\NoiseMaker.cs" />
+    <Compile Include="Engine\World\Generation\FastNoise.cs" />
+    <Compile Include="Engine\World\VoxelSprite.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Engine\World\Generation\Biomes\" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

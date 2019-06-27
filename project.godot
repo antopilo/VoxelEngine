@@ -31,6 +31,10 @@ window/size/test_width=800
 window/size/test_height=600
 window/vsync/use_vsync=false
 
+[editor_plugins]
+
+enabled=PoolStringArray( "voxel_factory" )
+
 [input]
 
 ui_left={

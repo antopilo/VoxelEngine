@@ -19,7 +19,7 @@ public enum Threads
 
 public class Engine : Node
 {
-    public static int RenderDistance = 18;
+    public static int RenderDistance = 16;
     public static Node Scene { get; set; }
     private static int CamX = 0;
     private static int CamZ = 0;
@@ -43,6 +43,7 @@ public class Engine : Node
     public override void _Ready()
     {
         LoadReference();
+        ModelLoader.LoadModels();
 
         NoiseMaker.Initialize();
 
@@ -78,7 +79,7 @@ public class Engine : Node
         {
             UI = (Control)Scene.GetNode("DEBUG_UI/HBoxContainer");
             FPS = (Label)UI.GetNode("fps");
-            Mem = (Label)UI.GetNode("mem");
+            //Mem = (Label)UI.GetNode("mem");
             LoadedCount = (Label)UI.GetNode("loaded");
             x = (Label)UI.GetNode("x");
             y = (Label)UI.GetNode("y");
@@ -94,11 +95,11 @@ public class Engine : Node
         // Debug UI
         if (m_Debug)
         {
-            FPS.Text = Godot.Engine.GetFramesPerSecond().ToString();
-            x.Text = CamX.ToString();
-            z.Text = CamZ.ToString();
-            y.Text = ((int)Camera.GlobalTransform.origin.y).ToString();
-            LoadedCount.Text = ChunkManager.GetLoadedCount().ToString();
+            FPS.Text = "FPS " + Godot.Engine.GetFramesPerSecond().ToString();
+            x.Text = "X " + ((int)Camera.GlobalTransform.origin.x).ToString();
+            z.Text = "X " + ((int)Camera.GlobalTransform.origin.z).ToString();
+            y.Text = "Y " +  ((int)Camera.GlobalTransform.origin.y).ToString();
+            LoadedCount.Text = "Chunks: " + ChunkManager.GetLoadedCount().ToString();
         }
 
         ChunkManager.CameraPosition = new Vector2(CamX, CamZ);
