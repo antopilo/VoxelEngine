@@ -103,6 +103,7 @@ public class ChunkManager
                     Chunk n = null;
                     if (chunk.isSurrounded)
                     {
+                        NoiseMaker.GenerateVegetation(chunk);
                         AddToRenderList(chunk);
                         m_PreloadedChunks.TryRemove(chunk.Position, out n);
                     }
@@ -149,7 +150,7 @@ public class ChunkManager
                         Chunk n = null;
                         // Remove from queue.
                         m_RenderList.TryRemove(chunk.Position, out n);
-                       // var timeEnd = DateTime.Now;
+                        //var timeEnd = DateTime.Now;
                         //GD.Print("Meshing took:", (timeEnd - timeStart).TotalMilliseconds.ToString(), "ms");
                     }
                 }

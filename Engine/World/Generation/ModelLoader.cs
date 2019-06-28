@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 public enum Models
 {
-    Grass, Flower, Fern
+    Grass, Flower, Fern, CactusTop, CactusTopCutoff, CactusMid, DeadBush
 }
 
 public class ModelLoader
@@ -28,6 +28,13 @@ public class ModelLoader
         LoadModel(Models.Grass, "Grass.tres");
         LoadModel(Models.Flower, "Flowers.tres");
         LoadModel(Models.Fern, "Fern.tres");
+
+        // Cactus
+        LoadModel(Models.CactusTop, "Cactus_top.tres");
+        LoadModel(Models.CactusTopCutoff, "Cactus_top2.tres");
+        LoadModel(Models.CactusMid, "Cactus_mid.tres");
+
+        LoadModel(Models.DeadBush, "DeadBush.tres");
     }
 
     private static void LoadModel(Models model, string path)

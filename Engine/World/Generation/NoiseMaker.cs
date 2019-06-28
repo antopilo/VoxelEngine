@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using VoxelEngine.engine.World;
 
 public class NoiseMaker
 {
@@ -75,14 +74,47 @@ public class NoiseMaker
                 int gx = x + offsetX;
                 int gz = z + offsetZ;
                 
-                GetBiome(gx, gz);
+                chunk.Biome = GetBiome(gx, gz);
 
                 float height = Mathf.Pow(GetHeight(gx, gz), 1.1f);
                 float final = Mathf.Clamp(height , 0, 255);
-                float temp = GetTemperature(gx, gz);
-
-                if(newBlock == BLOCK_TYPE.Grass)
+                
+                for (int i = 0; i < Mathf.Pow(Chunk.CHUNK_SIZE, 2); i++)
                 {
+                    if (i < final)
+                        chunk.AddBlock(new Vector3(x, i, z), newBlock);
+                }
+            }
+    }
+
+    public static void GenerateVegetation(Chunk chunk)
+    {
+        int offsetX = (int)chunk.Position.x * Chunk.CHUNK_SIZE;
+        int offsetZ = (int)chunk.Position.y * Chunk.CHUNK_SIZE;
+
+        int biome = chunk.Biome;
+
+        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+            {
+                int gx = x + offsetX;
+                int gz = z + offsetZ;
+                float temp = GetTemperature(gx, gz);
+                int final = chunk.HighestBlockAt(x, z);
+
+                // GRASS BIOME.
+                if(biome == 1)
+                {
+                    if(Rng.RandiRange(0, 10000) < 1)
+                    {
+                        GD.Print("PLATEAU SPAWNED !!!!");
+                        int height = Rng.RandiRange(10,50);
+                        int depth = Rng.RandiRange(25,70);
+                        int width = Rng.RandiRange(25,70);
+                        chunk.AddBlocks(Plateau.CreatePlateau(width, height, depth), new Vector3(0, final - 2, 0));
+                        
+                    }
+
                     if (temp > 0.75f)
                     {
                         if (Rng.Randf() < 0.2f)
@@ -94,12 +126,71 @@ public class NoiseMaker
                         if (Rng.Randf() < 0.1f)
                             chunk.AddSprite(new Vector3(x, final + 1, z), Models.Fern);
                     }
+                    else
+                    {
+                        
+                        if(Rng.Randf() < 0.1f)
+                            chunk.AddSprite(new Vector3(x, final + 1, z), Models.Grass);
+
+                        //else if(Rng.Randf() < 0.005f)
+                        //    chunk.AddBlocks(OakTree.GetTreeData(), new Vector3(x - 8, final + 1, z - 8));
+                            
+                    }
                 }
-                for (int i = 0; i < Mathf.Pow(Chunk.CHUNK_SIZE, 2); i++)
+                // DESERT BIOME.
+                else if(biome == 3)
                 {
-                    if (i < final)
-                        chunk.AddBlock(new Vector3(x, i, z), newBlock);
+
+                    if(Rng.RandiRange(0,1000) < 2)
+                    {
+                        var size = Rng.RandiRange(8,16);
+                        chunk.AddBlocks(Boulders.GetBoulder(size), new Vector3(x, final - size/2, z));
+                            
+                    }
+
+                    if(temp> 0.80f)
+                    {
+                        // 5% to place a cactus
+                        if(Rng.Randf() < 0.05f)
+                        {
+                            // Decide random height.
+                            var cactusHeight = Rng.RandiRange(0, 4);
+                            for(int i = 0; i < cactusHeight; i++)
+                            {
+                                var position = new Vector3(x, final + 1 + i, z);
+
+                                // Top of the cactus
+                                if(i == cactusHeight - 1)
+                                {
+                                    // No flower default.
+                                    Models topModel = Models.CactusTopCutoff;
+
+                                    // If the cactus is taller than 2 blocks. It has a flower.
+                                    if(cactusHeight == 2)
+                                        topModel = Rng.Randf() > 0.5f ? Models.CactusTop : Models.CactusTopCutoff;
+                                    else if(cactusHeight > 2)
+                                        topModel = Models.CactusTop;
+
+                                    // Add the top.
+                                    chunk.AddSprite(position, topModel);
+                                }
+                                else
+                                {
+                                    // Normal body of cactus.
+                                    chunk.AddSprite(position, Models.CactusMid);
+                                }
+                            }
+                        }
+                            
+                    }
+
+                    else if(temp > 0.6)
+                    {
+                        if(Rng.Randf() < 0.0025f)
+                            chunk.AddSprite(new Vector3(x, final + 1, z), Models.DeadBush);
+                    }
                 }
+
             }
     }
 
@@ -122,28 +213,32 @@ public class NoiseMaker
         return (Humidity.GetNoise2d(x, z) + 1f) / 2f;
     }
 
-    private static void GetBiome(int gx, int gz)
+    private static int GetBiome(int gx, int gz)
     {
         float voronoi = fastNoise.GetCellular(gx, gz);
         if (0f <= voronoi && voronoi < 0.5f)
         {
             newBlock = BLOCK_TYPE.Dirt;
             Amplitude = 1f;
+            return 0;
         }
         else if (0.5f <= voronoi && voronoi < 1f)
         {
             newBlock = BLOCK_TYPE.Grass;
             Amplitude = 0.3f;
+            return 1;
         }
         else if (1f <= voronoi && voronoi < 1.5f)
         {
             newBlock = BLOCK_TYPE.Water;
             Amplitude = 0f;
+            return 2;
         }
         else
         {
             newBlock = BLOCK_TYPE.Sand;
             Amplitude = 0.2f;
+            return 3;
         }
     }
 

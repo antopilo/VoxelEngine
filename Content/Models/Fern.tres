@@ -1,6 +1,32 @@
-[gd_resource type="ArrayMesh" load_steps=2 format=2]
+[gd_resource type="ArrayMesh" load_steps=4 format=2]
 
-[sub_resource type="SpatialMaterial" id=1]
+[ext_resource path="res://Content/Shaders/Waving.shader" type="Shader" id=1]
+
+[sub_resource type="ShaderMaterial" id=1]
+shader = ExtResource( 1 )
+shader_param/albedo = null
+shader_param/specular = null
+shader_param/metallic = null
+shader_param/roughness = null
+shader_param/point_size = null
+shader_param/metallic_texture_channel = null
+shader_param/roughness_texture_channel = null
+shader_param/transmission = null
+shader_param/speed = 1.0
+shader_param/minStrength = null
+shader_param/maxStrength = 0.5
+shader_param/interval = 3.5
+shader_param/detail = 1.0
+shader_param/distortion = 0.5
+shader_param/direction = Vector2( 1, 1 )
+shader_param/heightOffset = 0.0
+shader_param/uv1_scale = null
+shader_param/uv1_offset = null
+shader_param/uv2_scale = null
+shader_param/uv2_offset = null
+
+[sub_resource type="SpatialMaterial" id=2]
+next_pass = SubResource( 1 )
 vertex_color_use_as_albedo = true
 vertex_color_is_srgb = true
 
@@ -12,7 +38,7 @@ surfaces/0 = {
 "blend_shape_data": [  ],
 "format": 97547,
 "index_count": 912,
-"material": SubResource( 1 ),
+"material": SubResource( 2 ),
 "primitive": 4,
 "skeleton_aabb": [  ],
 "vertex_count": 548

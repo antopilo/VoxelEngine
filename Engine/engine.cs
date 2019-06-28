@@ -1,15 +1,10 @@
 using Godot;
 using System;
 using System.Threading;
-using VoxelEngine.engine;
-using VoxelEngine.engine.World;
 using VoxelEngine.Engine.World;
 using Thread = System.Threading.Thread;
 
 // TODOs:
-//  - Threads, 1 preload, 1 Render
-//  - remove side chunk of the mesh
-//  - NoiseMachine.
 //  - Update chunks
 
 public enum Threads
@@ -103,9 +98,6 @@ public class Engine : Node
         }
 
         ChunkManager.CameraPosition = new Vector2(CamX, CamZ);
-
-
-
     }
 }
 

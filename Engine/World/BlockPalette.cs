@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using VoxelEngine.engine.World;
 
 namespace VoxelEngine.Engine.World
 {
@@ -16,8 +15,8 @@ namespace VoxelEngine.Engine.World
             { BLOCK_TYPE.Stone, new Color(0,0,0,1f) },
             { BLOCK_TYPE.Dirt, new Color("a14800") },
             { BLOCK_TYPE.Grass, new Color(0.21176f,  0.87059f,  0.16471f) },
-            { BLOCK_TYPE.Sand, new Color(1,1,0) },
-            { BLOCK_TYPE.Leaves, new Color(114/ 255f, 252/ 255f, 60/ 255f) },
+            { BLOCK_TYPE.Sand, new Color("fff459") },
+            { BLOCK_TYPE.Leaves, new Color("1dc200") },
             { BLOCK_TYPE.Trunk, new Color(114/ 255f, 106/ 255f, 53/ 255f) },
         };
 

@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using VoxelEngine.engine;
-using VoxelEngine.engine.World;
-using VoxelEngine.Engine.World;
 
 public class Chunk : Spatial
 {
@@ -17,6 +14,8 @@ public class Chunk : Spatial
     public bool isSurrounded = false;
     public bool Updated = false;
     public bool Unloaded = true;
+
+    public int Biome = 0;
 
     private SubChunk[] m_SubChunks = new SubChunk[SUBCHUNK_COUNT];
 
@@ -93,11 +92,6 @@ public class Chunk : Spatial
         this.Translation = new Vector3(x, 0, z);
     }
 
-    internal void AddBlock(int x, int y, int z, BLOCK_TYPE newBlock)
-    {
-        throw new NotImplementedException();
-    }
-
 
     // Updates all the flags in each subchunks.
     public void Update()
@@ -172,6 +166,7 @@ public class Chunk : Spatial
             this.Visible = true;
     }
 
+
     public void Unload()
     {
         this.CallDeferred("queue_free");
@@ -206,15 +201,89 @@ public class Chunk : Spatial
     }
 
 
-    // Adds a block into a subchunk from global position.
+    // Adds a block into a subchunk from globalposition using Vector3.
     public void AddBlock(Vector3 position, BLOCK_TYPE block)
     {
-        int subChunkIndex = GetSubChunkIdFromHeight((int)position.y);
-        int subChunkHeight = (int)position.y - ((int)CHUNK_SIZE * (subChunkIndex));
-        var localPosition = new Vector3(position.x, subChunkHeight, position.z);
+        AddBlock((int)position.x, (int)position.y, (int)position.z, block);
+    }
+
+    // Adds a block into a subchunk from globalposition using ints.
+    public void AddBlock(int x, int y, int z, BLOCK_TYPE block)
+    {
+        if(block is BLOCK_TYPE.Empty)
+            return;
+
+        if(!IsPositionValid(x, y, z))
+        {
+            PlaceInvalidBlock(x, y, z, block);
+            return;
+        }
+
+        int subChunkIndex = GetSubChunkIdFromHeight(y);
+        int subChunkHeight = y - ((int)CHUNK_SIZE * (subChunkIndex));
+        var localPosition = new Vector3(x, subChunkHeight, z);
         m_SubChunks[subChunkIndex].AddBlock(localPosition, block);
         Updated = false;
     }
+
+    // Returns true if the given position is inside the chunk boundaries.
+    private bool IsPositionValid(int x, int y, int z)
+    {
+        if(x < 0 || x > 15 || z < 0 || z > 15)
+            return false;
+
+        return true;
+    }
+
+
+    // Place an invalid block into the right neigbhor chunk.
+    private void PlaceInvalidBlock(int x, int y, int z, BLOCK_TYPE block)
+    {
+        block = BLOCK_TYPE.Water;
+
+        int x2 = x, z2 = z;
+        if(x < 0)
+        {
+            x2 += 16;
+            this.ChunkLeft.AddBlock(x2, y, z2, block);
+            return;
+        }
+        
+        if(z < 0)
+        {
+            z2 = 16 + z2;
+            this.ChunkBack.AddBlock(x2, y, z2, block);
+            return;
+        }
+
+        if(x > 15)
+        {
+            x2 -= 16;
+            this.ChunkRight.AddBlock(x2, y, z2, block);
+            return;
+        }
+            
+        if(z > 15)
+        {
+            z2 -= 16;
+            this.ChunkFront.AddBlock(x2, y, z2, block);
+            return;
+        }
+    }
+
+
+    public void AddBlocks(int[,,] data, Vector3 Origin, bool overwrite = false)
+    {
+         for(int x = 0; x < data.GetLength(0); x++)
+            for(int y = 0; y < data.GetLength(1); y++)
+                for(int z = 0; z < data.GetLength(2); z++)
+                {
+                    var block = data[x, y, z];
+
+                    AddBlock(Origin + new Vector3(x, y, z), (BLOCK_TYPE)block);
+                }
+    }
+
 
     public void AddSprite(Vector3 position, Models model)
     {
@@ -226,6 +295,20 @@ public class Chunk : Spatial
         var sprite = new VoxelSprite(mesh, localPosition);
         m_SubChunks[subChunkIndex].AddDecoration(sprite);
 
+    }
+
+
+    public int HighestBlockAt(int x, int z)
+    {
+        // Scan from top of the chunk.
+        // Continue until there is a solid block. not -1
+        // else return bottom of chunk. 0.
+        for(int i = 255; i > 0; i--)
+        {
+            if(this.GetBlock(x, i, z) != -1)
+                return i;
+        }
+        return 0;
     }
 
 
@@ -244,7 +327,7 @@ public class Chunk : Spatial
                 subChunk.Name = i.ToString();
                 subChunk.Translate(new Vector3(0, i * CHUNK_SIZE, 0));
                 subChunk.Mesh = Renderer.Render(subChunk);
-
+            
                 foreach (VoxelSprite voxelSprite in subChunk.GetDecorations())
                 {
                     if (voxelSprite is null)
@@ -252,17 +335,17 @@ public class Chunk : Spatial
 
                     var newMesh = new MeshInstance();
                     newMesh.Scale = new Vector3(1f / 8f, 1f / 8f, 1f / 8f);
-                    newMesh.SetRotationDegrees(new Vector3(0, NoiseMaker.Rng.RandfRange(0, 360), 0));
+                    //newMesh.SetRotationDegrees(new Vector3(0, NoiseMaker.Rng.RandfRange(0, 360), 0));
                     newMesh.AddToGroup("decoration");
-
+                    newMesh.SetMaterialOverride(Renderer.GetWavingShader);
                     newMesh.SetDeferred("translation", voxelSprite.Position);
                     newMesh.Mesh = voxelSprite.Mesh;
-
+                    
                     subChunk.CallDeferred("add_child", newMesh);
                 }
 
                 this.CallDeferred("add_child", subChunk);
-
+                
                 // Creating a visibility notifier per chunk.
                 // This is useful for the frustrum culling.
                 // Connect the signals to the methods on the subchunk.
