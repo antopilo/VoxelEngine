@@ -79,10 +79,9 @@ public class NoiseMaker
                 float height = Mathf.Pow(GetHeight(gx, gz), 1.1f);
                 float final = Mathf.Clamp(height , 0, 255);
                 
-                for (int i = 0; i < Mathf.Pow(Chunk.CHUNK_SIZE, 2); i++)
+                for (int i = (int)final - 5; i < final; i++)
                 {
-                    if (i < final)
-                        chunk.AddBlock(new Vector3(x, i, z), newBlock);
+                    chunk.AddBlock(new Vector3(x, i, z), newBlock);
                 }
             }
     }

@@ -14,4 +14,3 @@ fog_color = Color( 0.411765, 0.819608, 1, 1 )
 fog_depth_begin = 256.0
 fog_depth_end = 435.4
 ssao_enabled = true
-

@@ -317,17 +317,20 @@ public class Chunk : Spatial
     {
         if (first)
         {
-            var visibilityNotifier = new VisibilityNotifier();
+            //var visibilityNotifier = new VisibilityNotifier();
             var size = new Vector3(CHUNK_SIZE, CHUNK_SIZE * SUBCHUNK_COUNT, CHUNK_SIZE);
-            visibilityNotifier.Aabb = new AABB(new Vector3(), size);
-            this.AddChild(visibilityNotifier);
+            //visibilityNotifier.Aabb = new AABB(new Vector3(), size);
+            //this.AddChild(visibilityNotifier);
             for (int i = 0; i < SUBCHUNK_COUNT; i++)
             {
                 var subChunk = m_SubChunks[i];
                 subChunk.Name = i.ToString();
                 subChunk.Translate(new Vector3(0, i * CHUNK_SIZE, 0));
                 subChunk.Mesh = Renderer.Render(subChunk);
-            
+
+                if(subChunk.Mesh != null)
+                    subChunk.CreateTrimeshCollision();
+
                 foreach (VoxelSprite voxelSprite in subChunk.GetDecorations())
                 {
                     if (voxelSprite is null)
@@ -349,8 +352,8 @@ public class Chunk : Spatial
                 // Creating a visibility notifier per chunk.
                 // This is useful for the frustrum culling.
                 // Connect the signals to the methods on the subchunk.
-                visibilityNotifier.Connect("camera_entered", subChunk, "CameraEntered", null, 1);
-                visibilityNotifier.Connect("camera_exited", subChunk, "CameraExited", null, 1);
+                //visibilityNotifier.Connect("camera_entered", subChunk, "CameraEntered", null, 1);
+                //visibilityNotifier.Connect("camera_exited", subChunk, "CameraExited", null, 1);
             }
         }
         else
@@ -368,7 +371,7 @@ public class Chunk : Spatial
     // Force set a subchunk to be visible or not.
     public void SetSubChunkVisibility(int idx, bool toggle)
     {
-        m_SubChunks[idx].Visible = toggle;
+        // m_SubChunks[idx].Visible = toggle;
     }
 }
 

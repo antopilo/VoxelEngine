@@ -186,14 +186,14 @@ public class SubChunk : MeshInstance
     // Signals for frustrum culling
     public void CameraEntered(Camera camera)
     {
-        if (camera.Name == "CameraInGame")
-            this.Visible = true;
+        //if (camera.Name == "CameraInGame")
+        //    this.Visible = true;
     }
 
     public void CameraExited(Camera camera)
     {
-        if (camera.Name == "CameraInGame")
-            this.Visible = false;
+        //if (camera.Name == "CameraInGame")
+        //    this.Visible = false;
     }
 }
 

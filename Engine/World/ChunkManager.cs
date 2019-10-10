@@ -89,28 +89,28 @@ public class ChunkManager
     // Update current preloaded chunk. 
     public static void UpdatePreloaded()
     {
-        while (true)
+        try
         {
-            try
+            for (int i = 0; i < m_PreloadedChunks.Count; i++)
             {
-                for (int i = 0; i < m_PreloadedChunks.Count; i++)
+                
+
+                var chunk = m_PreloadedChunks.ElementAt(i).Value;
+
+                if (chunk.Updated == false)
+                    chunk.Update();
+
+                Chunk n = null;
+                if (chunk.isSurrounded)
                 {
-                    var chunk = m_PreloadedChunks.ElementAt(i).Value;
-
-                    if (chunk.Updated == false)
-                        chunk.Update();
-
-                    Chunk n = null;
-                    if (chunk.isSurrounded)
-                    {
-                        NoiseMaker.GenerateVegetation(chunk);
-                        AddToRenderList(chunk);
-                        m_PreloadedChunks.TryRemove(chunk.Position, out n);
-                    }
+                    NoiseMaker.GenerateVegetation(chunk);
+                    AddToRenderList(chunk);
+                    m_PreloadedChunks.TryRemove(chunk.Position, out n);
                 }
             }
-            catch { }
         }
+        catch { }
+        
     }
 
     // Async rendering thread.
@@ -170,9 +170,9 @@ public class ChunkManager
 
     public static bool ShouldRenderChunk(Vector2 chunkPosition)
     {
-        Vector3 result = new Vector3(chunkPosition.x * 16, Camera.GlobalTransform.origin.y - 16f, chunkPosition.y * 16);
+        Vector3 result = new Vector3(chunkPosition.x * 16, Camera.GlobalTransform.origin.y, chunkPosition.y * 16);
         Vector2 position = Camera.UnprojectPosition(result);
-        if (Camera.IsPositionBehind(result) || position.x < 0 || position.x > 800 || position.y < 0 || position.y > 600)
+        if (position.x < 0 || position.x > 800 || position.y < 0 || position.y > 600)
             return false;
         return true;
     }

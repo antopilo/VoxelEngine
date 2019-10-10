@@ -57,7 +57,7 @@ public class Engine : Node
 
         Threads[0].Start();
         Threads[1].Start();
-        Threads[2].Start();
+        // Threads[2].Start();
 
         // 1- ChunkManager.Load();
         // 2- ChunkManager.UpdatePreloaded();
@@ -89,6 +89,7 @@ public class Engine : Node
     {
         CamX = (int)Camera.GlobalTransform.origin.x / 16;
         CamZ = (int)Camera.GlobalTransform.origin.z / 16;
+        ChunkManager.CameraPosition = new Vector2(CamX, CamZ);
 
         // Debug UI
         if (m_Debug)
@@ -100,7 +101,8 @@ public class Engine : Node
             LoadedCount.Text = "Chunks: " + ChunkManager.GetLoadedCount().ToString();
         }
 
-        ChunkManager.CameraPosition = new Vector2(CamX, CamZ);
+       
+        ChunkManager.UpdatePreloaded();
     }
 }
 
