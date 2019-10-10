@@ -16,3 +16,9 @@ C:\Users\Antoine\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.cspr
 C:\Users\Antoine\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.csproj.CoreCompileInputs.cache
 C:\Users\Antoine\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.dll
 C:\Users\Antoine\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.pdb
+F:\Desktop\repos\VoxelEngine\.mono\temp\bin\Tools\VoxelEngine.dll
+F:\Desktop\repos\VoxelEngine\.mono\temp\bin\Tools\VoxelEngine.pdb
+F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.csprojAssemblyReference.cache
+F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.csproj.CoreCompileInputs.cache
+F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.dll
+F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.pdb

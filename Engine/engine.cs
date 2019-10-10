@@ -12,9 +12,6 @@ public enum Threads
     PRELOAD, RENDER
 }
 
-// remy
-
-//@ssss
 public class Engine : Node
 {
     public static int RenderDistance = 16;
@@ -40,9 +37,11 @@ public class Engine : Node
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
+        Godot.Engine.TargetFps = 144;
+
+
         LoadReference();
         ModelLoader.LoadModels();
-
         NoiseMaker.Initialize();
 
         var startTime = DateTime.Now;

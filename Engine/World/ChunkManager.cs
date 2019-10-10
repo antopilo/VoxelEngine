@@ -103,7 +103,7 @@ public class ChunkManager
                 Chunk n = null;
                 if (chunk.isSurrounded)
                 {
-                    NoiseMaker.GenerateVegetation(chunk);
+                    NoiseMaker.GenerateChunkDecoration(chunk);
                     AddToRenderList(chunk);
                     m_PreloadedChunks.TryRemove(chunk.Position, out n);
                 }

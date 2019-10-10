@@ -221,14 +221,14 @@ public class Renderer
                 AddVertex(position, 6, CUBE_NORMALS[face]);
                 AddVertex(position, 7, CUBE_NORMALS[face]);
                 break;
-            case (int)CUBE_FACES.Bottom:
-                AddVertex(position, 1, CUBE_NORMALS[face]);
-                AddVertex(position, 3, CUBE_NORMALS[face]);
-                AddVertex(position, 2, CUBE_NORMALS[face]);
-                AddVertex(position, 1, CUBE_NORMALS[face]);
-                AddVertex(position, 0, CUBE_NORMALS[face]);
-                AddVertex(position, 3, CUBE_NORMALS[face]);
-                break;
+            //case (int)CUBE_FACES.Bottom:
+            //    AddVertex(position, 1, CUBE_NORMALS[face]);
+            //    AddVertex(position, 3, CUBE_NORMALS[face]);
+            //    AddVertex(position, 2, CUBE_NORMALS[face]);
+            //    AddVertex(position, 1, CUBE_NORMALS[face]);
+            //    AddVertex(position, 0, CUBE_NORMALS[face]);
+            //    AddVertex(position, 3, CUBE_NORMALS[face]);
+            //    break;
             case (int)CUBE_FACES.Left:
                 AddVertex(position, 0, CUBE_NORMALS[face]);
                 AddVertex(position, 7, CUBE_NORMALS[face]);
@@ -286,6 +286,7 @@ public class Renderer
             mesh.SurfaceSetMaterial(i, DefaultMaterial);
         }
     }
+
 
     public static SpatialMaterial GetWavingShader {
         get {

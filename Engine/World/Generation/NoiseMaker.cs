@@ -9,14 +9,14 @@ public class NoiseMaker
 {
     private static int seed = 0;
     private static FastNoise fastNoise = new FastNoise();
-    private static FastNoise fastNoise2 = new FastNoise();
+    public static FastNoise fastNoise2 = new FastNoise();
     public static RandomNumberGenerator Rng = new RandomNumberGenerator();
     private static OpenSimplexNoise Noise = new OpenSimplexNoise();
     private static OpenSimplexNoise Humidity = new OpenSimplexNoise();
     private static OpenSimplexNoise Temperature = new OpenSimplexNoise();
 
     private static float WaterLevel = 80f;
-    private static float Amplitude = 1f;
+    public static float Amplitude = 1f;
     private static BLOCK_TYPE newBlock = BLOCK_TYPE.Stone;
 
 
@@ -44,7 +44,6 @@ public class NoiseMaker
         fastNoise2.SetFractalLacunarity(2);
         fastNoise2.SetFractalGain(0.75f);
 
-
         Noise.Seed = seed;
         Noise.Octaves = 12;
         Noise.Period = 64;
@@ -66,143 +65,40 @@ public class NoiseMaker
 
     public static void GenerateChunk(Chunk chunk)
     {
-        int offsetX = (int)chunk.Position.x * Chunk.CHUNK_SIZE;
-        int offsetZ = (int)chunk.Position.y * Chunk.CHUNK_SIZE;
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            {
-                int gx = x + offsetX;
-                int gz = z + offsetZ;
-                
-                chunk.Biome = GetBiome(gx, gz);
+        int gx = (int)chunk.Position.x * 16;
+        int gz = (int)chunk.Position.y * 16;
+        chunk.Biome = GetBiome(gx, gz);
 
-                float height = Mathf.Pow(GetHeight(gx, gz), 1.1f);
-                float final = Mathf.Clamp(height , 0, 255);
-                
-                for (int i = (int)final - 5; i < final; i++)
-                {
-                    chunk.AddBlock(new Vector3(x, i, z), newBlock);
-                }
-            }
+        switch (chunk.Biome)
+        {
+            case BIOME_TYPE.Plains:
+                PlainBiome.Generate(ref chunk);
+                break;
+            case BIOME_TYPE.Desert:
+                DesertBiome.Generate(ref chunk);
+                break;
+        }
     }
 
-    public static void GenerateVegetation(Chunk chunk)
+    public static void GenerateChunkDecoration(Chunk chunk)
     {
-        int offsetX = (int)chunk.Position.x * Chunk.CHUNK_SIZE;
-        int offsetZ = (int)chunk.Position.y * Chunk.CHUNK_SIZE;
+        int gx = (int)chunk.Position.x * 16;
+        int gz = (int)chunk.Position.y * 16;
+        chunk.Biome = GetBiome(gx, gz);
 
-        int biome = chunk.Biome;
-
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            {
-                int gx = x + offsetX;
-                int gz = z + offsetZ;
-                float temp = GetTemperature(gx, gz);
-                int final = chunk.HighestBlockAt(x, z);
-
-                // GRASS BIOME.
-                if(biome == 1)
-                {
-                    if(Rng.RandiRange(0, 10000) < 1)
-                    {
-                        GD.Print("PLATEAU SPAWNED !!!!");
-                        int height = Rng.RandiRange(10,50);
-                        int depth = Rng.RandiRange(25,70);
-                        int width = Rng.RandiRange(25,70);
-                        chunk.AddBlocks(Plateau.CreatePlateau(width, height, depth), new Vector3(0, final - 2, 0));
-                        
-                    }
-
-                    if (temp > 0.75f)
-                    {
-                        if (Rng.Randf() < 0.2f)
-                            chunk.AddSprite(new Vector3(x, final + 1, z), Models.Flower);
-                    }
-
-                    else if (temp < 0.25f)
-                    {
-                        if (Rng.Randf() < 0.1f)
-                            chunk.AddSprite(new Vector3(x, final + 1, z), Models.Fern);
-                    }
-                    else
-                    {
-                        
-                        if(Rng.Randf() < 0.1f)
-                            chunk.AddSprite(new Vector3(x, final + 1, z), Models.Grass);
-
-                        //else if(Rng.Randf() < 0.005f)
-                        //    chunk.AddBlocks(OakTree.GetTreeData(), new Vector3(x - 8, final + 1, z - 8));
-                            
-                    }
-                }
-                // DESERT BIOME.
-                else if(biome == 3)
-                {
-
-                    if(Rng.RandiRange(0,1000) < 2)
-                    {
-                        var size = Rng.RandiRange(8,16);
-                        chunk.AddBlocks(Boulders.GetBoulder(size), new Vector3(x, final - size/2, z));
-                            
-                    }
-
-                    if(temp> 0.80f)
-                    {
-                        // 5% to place a cactus
-                        if(Rng.Randf() < 0.05f)
-                        {
-                            // Decide random height.
-                            var cactusHeight = Rng.RandiRange(0, 4);
-                            for(int i = 0; i < cactusHeight; i++)
-                            {
-                                var position = new Vector3(x, final + 1 + i, z);
-
-                                // Top of the cactus
-                                if(i == cactusHeight - 1)
-                                {
-                                    // No flower default.
-                                    Models topModel = Models.CactusTopCutoff;
-
-                                    // If the cactus is taller than 2 blocks. It has a flower.
-                                    if(cactusHeight == 2)
-                                        topModel = Rng.Randf() > 0.5f ? Models.CactusTop : Models.CactusTopCutoff;
-                                    else if(cactusHeight > 2)
-                                        topModel = Models.CactusTop;
-
-                                    // Add the top.
-                                    chunk.AddSprite(position, topModel);
-                                }
-                                else
-                                {
-                                    // Normal body of cactus.
-                                    chunk.AddSprite(position, Models.CactusMid);
-                                }
-                            }
-                        }
-                            
-                    }
-
-                    else if(temp > 0.6)
-                    {
-                        if(Rng.Randf() < 0.0025f)
-                            chunk.AddSprite(new Vector3(x, final + 1, z), Models.DeadBush);
-                    }
-                }
-
-            }
+        switch (chunk.Biome)
+        {
+            case BIOME_TYPE.Plains:
+                PlainBiome.GenerateVegetation(ref chunk);
+                break;
+            case BIOME_TYPE.Desert:
+                DesertBiome.GenerateVegetation(ref chunk);
+                break;
+        }
     }
 
 
-    private static float GetHeight(int x, int z)
-    {
-        float biome = GetHumidity(x, z);
-        float normalizedNoise = (fastNoise2.GetSimplexFractal(x, z) * Amplitude + 1f) / 2;
-        return (normalizedNoise) * ((Chunk.CHUNK_SIZE * 16) / 2);
-    }
-
-
-    private static float GetTemperature(int x, int z)
+    public static float GetTemperature(int x, int z)
     {
         return (Temperature.GetNoise2d(x, z) + 1f) / 2f;
     }
@@ -212,32 +108,32 @@ public class NoiseMaker
         return (Humidity.GetNoise2d(x, z) + 1f) / 2f;
     }
 
-    private static int GetBiome(int gx, int gz)
+    private static BIOME_TYPE GetBiome(int gx, int gz)
     {
         float voronoi = fastNoise.GetCellular(gx, gz);
         if (0f <= voronoi && voronoi < 0.5f)
         {
             newBlock = BLOCK_TYPE.Dirt;
             Amplitude = 1f;
-            return 0;
+            return BIOME_TYPE.Plains;
         }
         else if (0.5f <= voronoi && voronoi < 1f)
         {
             newBlock = BLOCK_TYPE.Grass;
             Amplitude = 0.3f;
-            return 1;
+            return BIOME_TYPE.Plains;
         }
         else if (1f <= voronoi && voronoi < 1.5f)
         {
             newBlock = BLOCK_TYPE.Water;
             Amplitude = 0f;
-            return 2;
+            return BIOME_TYPE.Plains;
         }
         else
         {
             newBlock = BLOCK_TYPE.Sand;
             Amplitude = 0.2f;
-            return 3;
+            return BIOME_TYPE.Plains;
         }
     }
 
@@ -259,4 +155,5 @@ public class NoiseMaker
         );
     }
 }
+
 

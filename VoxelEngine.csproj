@@ -58,6 +58,9 @@
     <Compile Include="Engine\World\Chunk\Chunk.cs" />
     <Compile Include="Engine\World\ChunkManager.cs" />
     <Compile Include="Engine\World\Chunk\SubChunk.cs" />
+    <Compile Include="Engine\World\Generation\Biomes\DesertBiome.cs" />
+    <Compile Include="Engine\World\Generation\Biomes\IBiome.cs" />
+    <Compile Include="Engine\World\Generation\Biomes\PlainBiome.cs" />
     <Compile Include="Engine\World\Generation\ModelLoader.cs" />
     <Compile Include="Engine\World\Generation\NoiseMaker.cs" />
     <Compile Include="Engine\World\Generation\FastNoise.cs" />
@@ -67,5 +70,6 @@
     <Compile Include="Engine\World\Generation\Boulders\Boulders.cs" />
     <Compile Include="Engine\World\Generation\Terrains\Plateau.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

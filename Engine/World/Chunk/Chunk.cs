@@ -15,7 +15,7 @@ public class Chunk : Spatial
     public bool Updated = false;
     public bool Unloaded = true;
 
-    public int Biome = 0;
+    public BIOME_TYPE Biome = BIOME_TYPE.Plains;
 
     private SubChunk[] m_SubChunks = new SubChunk[SUBCHUNK_COUNT];
 
@@ -222,6 +222,7 @@ public class Chunk : Spatial
         int subChunkIndex = GetSubChunkIdFromHeight(y);
         int subChunkHeight = y - ((int)CHUNK_SIZE * (subChunkIndex));
         var localPosition = new Vector3(x, subChunkHeight, z);
+
         m_SubChunks[subChunkIndex].AddBlock(localPosition, block);
         Updated = false;
     }
@@ -317,10 +318,10 @@ public class Chunk : Spatial
     {
         if (first)
         {
-            //var visibilityNotifier = new VisibilityNotifier();
+            // var visibilityNotifier = new VisibilityNotifier();
             var size = new Vector3(CHUNK_SIZE, CHUNK_SIZE * SUBCHUNK_COUNT, CHUNK_SIZE);
-            //visibilityNotifier.Aabb = new AABB(new Vector3(), size);
-            //this.AddChild(visibilityNotifier);
+            // visibilityNotifier.Aabb = new AABB(new Vector3(), size);
+            // this.AddChild(visibilityNotifier);
             for (int i = 0; i < SUBCHUNK_COUNT; i++)
             {
                 var subChunk = m_SubChunks[i];
@@ -340,7 +341,7 @@ public class Chunk : Spatial
                     newMesh.Scale = new Vector3(1f / 8f, 1f / 8f, 1f / 8f);
                     //newMesh.SetRotationDegrees(new Vector3(0, NoiseMaker.Rng.RandfRange(0, 360), 0));
                     newMesh.AddToGroup("decoration");
-                    newMesh.SetMaterialOverride(Renderer.GetWavingShader);
+                    newMesh.MaterialOverride = Renderer.GetWavingShader;
                     newMesh.SetDeferred("translation", voxelSprite.Position);
                     newMesh.Mesh = voxelSprite.Mesh;
                     

@@ -16,6 +16,7 @@ _global_script_class_icons={
 [application]
 
 config/name="VoxelEngine"
+config/description="Voxel based procodural generated world."
 run/main_scene="res://Game.tscn"
 config/icon="res://icon.png"
 
@@ -29,10 +30,12 @@ settings/fps/force_fps=60
 
 [display]
 
-window/size/width=800
+window/size/width=1280
+window/size/height=720
 window/size/resizable=false
-window/size/test_width=800
-window/size/test_height=600
+window/size/test_width=1280
+window/size/test_height=720
+window/vsync/use_vsync=false
 
 [editor_plugins]
 
