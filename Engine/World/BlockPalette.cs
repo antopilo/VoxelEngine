@@ -11,7 +11,7 @@ namespace VoxelEngine.Engine.World
     {
         private static Dictionary<BLOCK_TYPE, Color> m_Palette = new Dictionary<BLOCK_TYPE, Color>
         {
-            { BLOCK_TYPE.Water, new Color(0.21176f, 0.5137f, 1, 0.5f) },
+            { BLOCK_TYPE.Water, new Color(0.21176f, 0.5137f, 1) },
             { BLOCK_TYPE.Stone, new Color(0,0,0,1f) },
             { BLOCK_TYPE.Dirt, new Color("a14800") },
             { BLOCK_TYPE.Grass, new Color(0.21176f,  0.87059f,  0.16471f) },

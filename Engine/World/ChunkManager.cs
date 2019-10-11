@@ -40,7 +40,7 @@ public class ChunkManager
 
         // Updates the preloaded chunks and generate 
         // second pass.
-        UpdatePreloaded();
+        UpdateLoaded();
 
         // Render the fully loaded chunks.
         Render();
@@ -90,8 +90,6 @@ public class ChunkManager
     /// </summary>
     public static void UpdateLoadList()
     {
-        int numLoadedChunks = 0;
-
         foreach (Vector2 chunkPos in m_ChunkLoadList.OrderBy(c => DistanceToChunk(c)))
         {
             if (m_LoadedChunk.ContainsKey(chunkPos))
@@ -103,8 +101,7 @@ public class ChunkManager
             // Setup
             newChunk.ChunkSetup();
 
-            // Generate the landscape.
-            NoiseMaker.GenerateChunk(newChunk);
+            
 
             m_LoadedChunk.Add(chunkPos, newChunk);
         }
@@ -117,7 +114,7 @@ public class ChunkManager
     /// Updates preloaded chunks and execute second pass of generation that necessite the chunk
     /// to be surrounded by loaded chunks. E.g: Trees that generates on chunk borders.
     /// </summary>
-    public static void UpdatePreloaded()
+    public static void UpdateLoaded()
     {
         for (int i = 0; i < m_LoadedChunk.Count; i++)
         {
@@ -128,8 +125,9 @@ public class ChunkManager
 
             if (chunk.isSurrounded && !chunk.Rendered && !m_RenderList.ContainsKey(chunk.Position))
             {
+                NoiseMaker.GenerateChunk(chunk);
                 //NoiseMaker.GenerateChunkDecoration(chunk);
-                
+                // Generate the landscape.
                 m_RenderList.Add(chunk.Position, chunk);
             }
         }
@@ -142,7 +140,8 @@ public class ChunkManager
     {
         int numChunkRendered = 0;
 
-        if (m_RenderList.Count <= 0)
+        // If there is no chunk to render skip.
+        if (m_RenderList.Count == 0)
             return;
 
         foreach (Chunk item in m_RenderList.Values.OrderBy(c => DistanceToChunk(c.Position)))
@@ -177,16 +176,20 @@ public class ChunkManager
     /// </summary>
     public static void UpdateUnloader()
     {
+        // List of chunk that will be unloaded after the scan.
         List<Vector2> unloadedChunks = new List<Vector2>();
 
+        // Scan for chunk that should be unloaded, then adds them to the list.
         foreach (Vector2 loadedChunkPos in m_LoadedChunk.Keys)
         {
-            // If the chunk position is in the render radius. Add it to the queue.
+            // If the chunk position is outside the render distance.
             if ((CameraPosition - loadedChunkPos).Length() > Engine.RenderDistance * 2)
             {
+                // Get the chunk and call unload on it.
                 Chunk chunk = m_LoadedChunk[loadedChunkPos];
                 chunk.Unload();
 
+                // Add the chunk to the list.
                 unloadedChunks.Add(loadedChunkPos);
 
                 // Remove any trace of the chunk in the memory to prevent

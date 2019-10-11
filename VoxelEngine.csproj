@@ -60,6 +60,8 @@
     <Compile Include="Engine\World\Chunk\SubChunk.cs" />
     <Compile Include="Engine\World\Generation\Biomes\DesertBiome.cs" />
     <Compile Include="Engine\World\Generation\Biomes\IBiome.cs" />
+    <Compile Include="Engine\World\Generation\Biomes\ForestBiome.cs" />
+    <Compile Include="Engine\World\Generation\Biomes\SeaBiome.cs" />
     <Compile Include="Engine\World\Generation\Biomes\PlainBiome.cs" />
     <Compile Include="Engine\World\Generation\ModelLoader.cs" />
     <Compile Include="Engine\World\Generation\NoiseMaker.cs" />

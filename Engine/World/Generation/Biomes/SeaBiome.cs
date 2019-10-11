@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public class PlainBiome
+public class SeaBiome
 {
     public static string Name { get; set; }
 
@@ -22,7 +22,6 @@ public class PlainBiome
         {
             chunk.AddBlock(new Vector3(x, i, z), BLOCK_TYPE.Grass);
         }
-            
     }
 
     public static void GenerateVegetation(ref Chunk chunk)

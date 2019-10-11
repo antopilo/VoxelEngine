@@ -24,7 +24,7 @@ public class Engine : Node
     public static int SpawnRadius = 8;
 
     // Multi-threading
-    private bool MultiThreaded = false;
+    private bool MultiThreaded = true;
     private Thread[] Threads = new Thread[3];
 
     private static float TickDuration = 1 / 20f;

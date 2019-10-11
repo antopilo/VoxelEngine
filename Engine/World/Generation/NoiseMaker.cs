@@ -36,6 +36,7 @@ public class NoiseMaker
         fastNoise.SetSeed(seed);
         fastNoise.SetFrequency(0.0025f);
         fastNoise.SetCellularJitter(0.5f);
+        fastNoise.SetCellularDistanceFunction(FastNoise.CellularDistanceFunction.Natural);
         fastNoise.SetCellularReturnType(FastNoise.CellularReturnType.CellValue);
 
         fastNoise2.SetSeed(seed);
@@ -67,17 +68,29 @@ public class NoiseMaker
     {
         int gx = (int)chunk.Position.x * 16;
         int gz = (int)chunk.Position.y * 16;
-        chunk.Biome = GetBiome(gx, gz);
 
-        switch (chunk.Biome)
-        {
-            case BIOME_TYPE.Plains:
-                PlainBiome.Generate(ref chunk);
-                break;
-            case BIOME_TYPE.Desert:
-                DesertBiome.Generate(ref chunk);
-                break;
-        }
+        for (int x = 0; x < Chunk.CHUNK_SIZE; x ++)
+            for (int z = 0; z < Chunk.CHUNK_SIZE; z ++)
+            {
+                BIOME_TYPE biome = GetBiome(gx + x, gz + z);
+                switch (biome)
+                {
+                    case BIOME_TYPE.Plains:
+                        PlainBiome.Generate(ref chunk, x, z);
+                        break;
+                    case BIOME_TYPE.Desert:
+                        DesertBiome.Generate(ref chunk, x, z);
+                        break;
+                    case BIOME_TYPE.Sea:
+                        SeaBiome.Generate(ref chunk, x, z);
+                        break;
+                    case BIOME_TYPE.Forest:
+                        ForestBiome.Generate(ref chunk, x, z);
+                        break;
+                }
+
+
+            }
     }
 
     public static void GenerateChunkDecoration(Chunk chunk)
@@ -93,6 +106,12 @@ public class NoiseMaker
                 break;
             case BIOME_TYPE.Desert:
                 DesertBiome.GenerateVegetation(ref chunk);
+                break;
+            case BIOME_TYPE.Sea:
+                SeaBiome.GenerateVegetation(ref chunk);
+                break;
+            case BIOME_TYPE.Forest:
+                ForestBiome.GenerateVegetation(ref chunk);
                 break;
         }
     }
@@ -110,49 +129,48 @@ public class NoiseMaker
 
     private static BIOME_TYPE GetBiome(int gx, int gz)
     {
+        // Voronoi range from 0 to 1.
         float voronoi = fastNoise.GetCellular(gx, gz);
-        if (0f <= voronoi && voronoi < 0.5f)
+        if (0f <= voronoi && voronoi < 0.25f)
         {
-            newBlock = BLOCK_TYPE.Dirt;
             Amplitude = 1f;
             return BIOME_TYPE.Plains;
         }
-        else if (0.5f <= voronoi && voronoi < 1f)
+        else if (0.25f <= voronoi && voronoi < 0.5f)
         {
-            newBlock = BLOCK_TYPE.Grass;
             Amplitude = 0.3f;
-            return BIOME_TYPE.Plains;
+            return BIOME_TYPE.Desert;
         }
-        else if (1f <= voronoi && voronoi < 1.5f)
+        else if (0.5f <= voronoi && voronoi < 0.75f)
         {
-            newBlock = BLOCK_TYPE.Water;
-            Amplitude = 0f;
-            return BIOME_TYPE.Plains;
+            Amplitude = 1f;
+            return BIOME_TYPE.Sea;
         }
         else
         {
-            newBlock = BLOCK_TYPE.Sand;
             Amplitude = 0.2f;
-            return BIOME_TYPE.Plains;
+            return BIOME_TYPE.Forest;
         }
     }
 
-    private static float BilinearInterpolation(float bottomLeft, float topLeft, float bottomRight, float topRight,
-                                        float xMin, float xMax, float zMin, float zMax, float x, float z)
-    {
-        float width = xMax - xMin;
-        float height = zMax - zMin;
-        float xDistanceToMaxValue = xMax - x;
-        float zDistanceToMaxValue = zMax - z;
-        float xDistanceToMinValue = xMin - x;
-        float zDistanceToMinValue = zMin - z;
 
-        return 1.0f / (width - height) * (
-            bottomLeft * xDistanceToMaxValue * zDistanceToMaxValue +
-            bottomRight * xDistanceToMinValue * zDistanceToMaxValue + 
-            topLeft * xDistanceToMaxValue * zDistanceToMinValue +
-            topRight * xDistanceToMinValue * zDistanceToMinValue
-        );
+    /// <summary>
+    /// Calculate a bilinear interpolation between 4 corners 
+    /// at a given point;
+    /// </summary>
+    /// <param name="q11">Bottom left corner value</param>
+    /// <param name="q21">Bottom right corner value</param>
+    /// <param name="q12">Top left corner value</param>
+    /// <param name="q22">Top right corner value</param>
+    /// <param name="position">point</param>
+    /// <param name="distanceBetweenCorners">Sample rate.</param>
+    /// <returns></returns>
+    private static float BilinearInterpolation(float q11, float q21, float q12, float q22, Vector2 position, int distanceBetweenCorners)
+    {
+        float r2 = Mathf.Lerp(q12, q22, position.x + 1 / distanceBetweenCorners);
+        float r1 = Mathf.Lerp(q11, q21, position.x + 1 / distanceBetweenCorners);
+        float p = Mathf.Lerp(r1, r2, position.y / q22);
+        return p;
     }
 }
 

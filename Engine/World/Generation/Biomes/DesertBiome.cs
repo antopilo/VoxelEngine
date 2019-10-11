@@ -8,25 +8,19 @@ using System.Threading.Tasks;
 
 public static class DesertBiome
 {
-    public static void Generate(ref Chunk chunk)
+    public static void Generate(ref Chunk chunk, int x, int z)
     {
-        int offsetX = (int)chunk.Position.x * Chunk.CHUNK_SIZE;
-        int offsetZ = (int)chunk.Position.y * Chunk.CHUNK_SIZE;
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            {
-                int gx = x + offsetX;
-                int gz = z + offsetZ;
+        int globalX = (int)chunk.Position.x * Chunk.CHUNK_SIZE + x;
+        int globalZ = (int)chunk.Position.y * Chunk.CHUNK_SIZE + z;
 
-                float height = Mathf.Pow(GetHeight(gx, gz), 1.1f);
-                float final = Mathf.Clamp(height, 0, 255);
+        float height = GetHeight(globalX, globalZ);
 
-                for (int i = (int)final - 5; i < final; i++)
-                {
-                    chunk.AddBlock(new Vector3(x, i, z), BLOCK_TYPE.Sand);
-                }
+        float final = Mathf.Clamp(height, 0, 255);
 
-            }
+        for (int i = (int)final - 5; i < final; i++)
+        {
+            chunk.AddBlock(new Vector3(x, i, z), BLOCK_TYPE.Grass);
+        }
     }
 
     public static void GenerateVegetation(ref Chunk chunk)

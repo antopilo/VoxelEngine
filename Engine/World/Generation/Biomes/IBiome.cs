@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 public enum BIOME_TYPE
 {
-    Plains, Desert
+    Plains, Desert, Sea, Forest
 }
 
 
