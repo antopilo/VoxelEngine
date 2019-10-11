@@ -16,7 +16,6 @@ public class Engine : Node
 {
     public static Node Scene { get; set; }
 
-
     public static int CamX = 0;
     public static int CamZ = 0;
 

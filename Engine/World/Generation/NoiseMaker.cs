@@ -88,8 +88,6 @@ public class NoiseMaker
                         ForestBiome.Generate(ref chunk, x, z);
                         break;
                 }
-
-
             }
     }
 
