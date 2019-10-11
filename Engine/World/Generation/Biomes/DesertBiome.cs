@@ -23,71 +23,43 @@ public static class DesertBiome
         }
     }
 
-    public static void GenerateVegetation(ref Chunk chunk)
+    public static void GenerateVegetation(ref Chunk chunk, int x, int z)
     {
         RandomNumberGenerator Rng = NoiseMaker.Rng;
-        float height;
+        float height = chunk.HighestBlockAt(x, z) + 1;
 
-        int offsetX = (int)chunk.Position.x * Chunk.CHUNK_SIZE;
-        int offsetZ = (int)chunk.Position.y * Chunk.CHUNK_SIZE;
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            {
-                // Place the decoration above the ground.
-                height = chunk.HighestBlockAt(x, z) + 1;
-                float temp = NoiseMaker.GetTemperature((int)(chunk.Position.x * 16) + x,
-                                                        (int)(chunk.Position.x * 16f) + z);
-                if (Rng.RandiRange(0, 1000) < 2)
-                {
-                    var size = Rng.RandiRange(8, 16);
-                    chunk.AddBlocks(Boulders.GetBoulder(size), new Vector3(x, height - size / 2, z));
+        // Place the decoration above the ground.
+        float temp = NoiseMaker.GetTemperature((int)(chunk.Position.x * 16) + x,
+                                                (int)(chunk.Position.y * 16) + z);
 
-                }
+        // Placing plateaus
+        //if (Rng.RandiRange(0, 10000) < 1)
+        //{
+        //    int treeHeight = Rng.RandiRange(10, 50);
+        //    int depth = Rng.RandiRange(25, 70);
+        //    int width = Rng.RandiRange(25, 70);
+        //    chunk.AddBlocks(Plateau.CreatePlateau(width, treeHeight, depth), new Vector3(0, height - 2, 0));
+        //}
 
-                if (temp > 0.80f)
-                {
-                    // 5% to place a cactus
-                    if (Rng.Randf() < 0.05f)
-                    {
-                        // Decide random height.
-                        var cactusHeight = Rng.RandiRange(0, 4);
-                        for (int i = 0; i < cactusHeight; i++)
-                        {
-                            var position = new Vector3(x, height + i, z);
+        // Vegetation
+        if (temp > 0.75f) // Flower
+        {
+            if (Rng.Randf() < 0.2f)
+                chunk.AddSprite(new Vector3(x, height, z), Models.Flower);
+        }
+        else if (temp < 0.25f) // Fern
+        {
+            if (Rng.Randf() < 0.1f)
+                chunk.AddSprite(new Vector3(x, height, z), Models.Fern);
+        }
+        //else // Tree
+        //{
+        //    if (Rng.Randf() < 0.1f)
+        //        chunk.AddSprite(new Vector3(x, height, z), Models.Grass);
 
-                            // Top of the cactus
-                            if (i == cactusHeight - 1)
-                            {
-                                // No flower default.
-                                Models topModel = Models.CactusTopCutoff;
-
-                                // If the cactus is taller than 2 blocks. It has a flower.
-                                if (cactusHeight == 2)
-                                    topModel = Rng.Randf() > 0.5f ? Models.CactusTop : Models.CactusTopCutoff;
-                                else if (cactusHeight > 2)
-                                    topModel = Models.CactusTop;
-
-                                // Add the top.
-                                chunk.AddSprite(position, topModel);
-                            }
-                            else
-                            {
-                                // Normal body of cactus.
-                                chunk.AddSprite(position, Models.CactusMid);
-                            }
-                        }
-                    }
-                }
-                else if (temp > 0.6)
-                {
-                    if (Rng.Randf() < 0.0025f)
-                        chunk.AddSprite(new Vector3(x, height, z), Models.DeadBush);
-                }
-            }
-
-                
-        
-    
+        //    else if (Rng.Randf() < 0.005f)
+        //        chunk.AddBlocks(OakTree.GetTreeData(), new Vector3(x - 8, height, z - 8));
+        //}
     }
 
     private static float GetHeight(int x, int z)

@@ -25,47 +25,44 @@ public class PlainBiome
             
     }
 
-    public static void GenerateVegetation(ref Chunk chunk)
+    public static void GenerateVegetation(ref Chunk chunk, int x, int z)
     {
         RandomNumberGenerator Rng = NoiseMaker.Rng;
-        float height;
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            {
-                // Place the decoration above the ground.
-                height = chunk.HighestBlockAt(x, z) + 1;
-                float temp = NoiseMaker.GetTemperature((int)(chunk.Position.x * 16) + x, 
-                                                        (int)(chunk.Position.x * 16f) + z);
+        float height = chunk.HighestBlockAt(x, z) + 1;
 
-                // Placing plateaus
-                //if (Rng.RandiRange(0, 10000) < 1)
-                //{
-                //    int treeHeight = Rng.RandiRange(10, 50);
-                //    int depth = Rng.RandiRange(25, 70);
-                //    int width = Rng.RandiRange(25, 70);
-                //    chunk.AddBlocks(Plateau.CreatePlateau(width, treeHeight, depth), new Vector3(0, height - 2, 0));
-                //}
+        // Place the decoration above the ground.
+        float temp = NoiseMaker.GetTemperature((int)(chunk.Position.x * 16) + x, 
+                                               (int)(chunk.Position.y * 16) + z);
 
-                // Vegetation
-                if (temp > 0.75f) // Flower
-                {
-                    if (Rng.Randf() < 0.2f)
-                        chunk.AddSprite(new Vector3(x, height, z), Models.Flower);
-                }
-                else if (temp < 0.25f) // Fern
-                {
-                    if (Rng.Randf() < 0.1f)
-                        chunk.AddSprite(new Vector3(x, height, z), Models.Fern);
-                }
-                else // Tree
-                {
-                    if (Rng.Randf() < 0.1f)
-                        chunk.AddSprite(new Vector3(x, height, z), Models.Grass);
+        // Placing plateaus
+        //if (Rng.RandiRange(0, 10000) < 1)
+        //{
+        //    int treeHeight = Rng.RandiRange(10, 50);
+        //    int depth = Rng.RandiRange(25, 70);
+        //    int width = Rng.RandiRange(25, 70);
+        //    chunk.AddBlocks(Plateau.CreatePlateau(width, treeHeight, depth), new Vector3(0, height - 2, 0));
+        //}
 
-                    else if (Rng.Randf() < 0.005f)
-                        chunk.AddBlocks(OakTree.GetTreeData(), new Vector3(x - 8, height, z - 8));
-                }
-            }
+        // Vegetation
+        if (temp > 0.75f) // Flower
+        {
+            if (Rng.Randf() < 0.2f)
+                chunk.AddSprite(new Vector3(x, height, z), Models.Flower);
+        }
+        else if (temp < 0.25f) // Fern
+        {
+            if (Rng.Randf() < 0.1f)
+                chunk.AddSprite(new Vector3(x, height, z), Models.Fern);
+        }
+        //else // Tree
+        //{
+        //    if (Rng.Randf() < 0.1f)
+        //        chunk.AddSprite(new Vector3(x, height, z), Models.Grass);
+
+        //    else if (Rng.Randf() < 0.005f)
+        //        chunk.AddBlocks(OakTree.GetTreeData(), new Vector3(x - 8, height, z - 8));
+        //}
+            
     }
 
     private static float GetHeight(int x, int z)

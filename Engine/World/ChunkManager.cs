@@ -16,9 +16,6 @@ public class ChunkManager
     // Chunks that are not loaded and should be.
     private static List<Vector2> m_ChunkLoadList = new List<Vector2>();
 
-    // Chunks that are ready to be edited.
-    private static Dictionary<Vector2, Chunk> m_PreloadedChunks = new Dictionary<Vector2, Chunk>();
-
     // Chunks that are fully generated and are waiting to be rendered.
     private static Dictionary<Vector2, Chunk> m_RenderList = new Dictionary<Vector2, Chunk>();
 
@@ -75,8 +72,7 @@ public class ChunkManager
                 // If the chunk position is in the render radius
                 // and is not already loaded, add it to the queue.
                 if ((CameraPosition - chunkPosition).Length() < Engine.RenderDistance 
-                    && !m_LoadedChunk.ContainsKey(chunkPosition) && !m_ChunkLoadList.Contains(chunkPosition)
-                    && !m_RenderList.ContainsKey(chunkPosition) && !m_PreloadedChunks.ContainsKey(chunkPosition))
+                    && !m_LoadedChunk.ContainsKey(chunkPosition) && !m_ChunkLoadList.Contains(chunkPosition))
                 {
                     //GD.Print(chunkPosition + " added to Load queue.");
                     m_ChunkLoadList.Add(chunkPosition);
@@ -92,16 +88,11 @@ public class ChunkManager
     {
         foreach (Vector2 chunkPos in m_ChunkLoadList.OrderBy(c => DistanceToChunk(c)))
         {
-            if (m_LoadedChunk.ContainsKey(chunkPos))
-                break;
-
             var newChunk = new Chunk();
             newChunk.SetPosition(chunkPos);
 
             // Setup
             newChunk.ChunkSetup();
-
-            
 
             m_LoadedChunk.Add(chunkPos, newChunk);
         }
@@ -116,22 +107,19 @@ public class ChunkManager
     /// </summary>
     public static void UpdateLoaded()
     {
-        for (int i = 0; i < m_LoadedChunk.Count; i++)
+        foreach (Chunk chunk in m_LoadedChunk.Values)
         {
-            var chunk = m_LoadedChunk.ElementAt(i).Value;
-
             if (chunk.Updated == false)
                 chunk.Update();
 
             if (chunk.isSurrounded && !chunk.Rendered && !m_RenderList.ContainsKey(chunk.Position))
             {
                 NoiseMaker.GenerateChunk(chunk);
-                //NoiseMaker.GenerateChunkDecoration(chunk);
+                NoiseMaker.GenerateChunkDecoration(chunk);
                 // Generate the landscape.
                 m_RenderList.Add(chunk.Position, chunk);
             }
         }
-
     }
 
 
@@ -196,9 +184,6 @@ public class ChunkManager
                 // access to a unloaded chunks.
                 if (m_RenderList.ContainsKey(chunk.Position))
                     m_RenderList.Remove(chunk.Position);
-
-                if (m_PreloadedChunks.ContainsKey(chunk.Position))
-                    m_PreloadedChunks.Remove(chunk.Position);
             }
         }
 

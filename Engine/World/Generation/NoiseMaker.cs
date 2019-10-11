@@ -95,22 +95,26 @@ public class NoiseMaker
     {
         int gx = (int)chunk.Position.x * 16;
         int gz = (int)chunk.Position.y * 16;
-        chunk.Biome = GetBiome(gx, gz);
 
-        switch (chunk.Biome)
-        {
-            case BIOME_TYPE.Plains:
-                PlainBiome.GenerateVegetation(ref chunk);
-                break;
-            case BIOME_TYPE.Desert:
-                DesertBiome.GenerateVegetation(ref chunk);
-                break;
-            case BIOME_TYPE.Sea:
-                SeaBiome.GenerateVegetation(ref chunk);
-                break;
-            case BIOME_TYPE.Forest:
-                ForestBiome.GenerateVegetation(ref chunk);
-                break;
+        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+            {
+                BIOME_TYPE biome = GetBiome(gx + x, gz + z);
+                switch (biome)
+                {
+                    case BIOME_TYPE.Plains:
+                        PlainBiome.GenerateVegetation(ref chunk, x, z);
+                        break;
+                    case BIOME_TYPE.Desert:
+                        DesertBiome.GenerateVegetation(ref chunk, x, z);
+                        break;
+                    case BIOME_TYPE.Sea:
+                        SeaBiome.GenerateVegetation(ref chunk, x, z);
+                        break;
+                    case BIOME_TYPE.Forest:
+                        ForestBiome.GenerateVegetation(ref chunk, x, z);
+                        break;
+                }
         }
     }
 

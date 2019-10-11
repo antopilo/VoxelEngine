@@ -22,3 +22,9 @@ F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.csprojAssemblyRefe
 F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.csproj.CoreCompileInputs.cache
 F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.dll
 F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.pdb
+C:\Users\1780489\Desktop\VoxelEngine\.mono\temp\bin\Tools\VoxelEngine.dll
+C:\Users\1780489\Desktop\VoxelEngine\.mono\temp\bin\Tools\VoxelEngine.pdb
+C:\Users\1780489\Desktop\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.csprojAssemblyReference.cache
+C:\Users\1780489\Desktop\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.csproj.CoreCompileInputs.cache
+C:\Users\1780489\Desktop\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.dll
+C:\Users\1780489\Desktop\VoxelEngine\.mono\temp\obj\Tools\VoxelEngine.pdb

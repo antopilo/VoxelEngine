@@ -29,7 +29,7 @@ public class Engine : Node
     private static float TickDuration = 1 / 20f;
     private static float NextTick = 0f;
 
-    public static int chunkRenderedPerTick = 4;
+    public static int chunkRenderedPerTick = 16;
 
     // UI components for debugging.
     private bool m_Debug = true;
