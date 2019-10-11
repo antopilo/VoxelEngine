@@ -13,152 +13,196 @@ using System.Linq;
 
 public class ChunkManager
 {
-    // Load queue.
-    private static ConcurrentQueue<Vector2> m_ChunkLoadList = new ConcurrentQueue<Vector2>();
+    // Chunks that are not loaded and should be.
+    private static List<Vector2> m_ChunkLoadList = new List<Vector2>();
 
-    // Loaded chunk.
-    private static ConcurrentDictionary<Vector2, Chunk> m_PreloadedChunks = new ConcurrentDictionary<Vector2, Chunk>();
+    // Chunks that are ready to be edited.
+    private static Dictionary<Vector2, Chunk> m_PreloadedChunks = new Dictionary<Vector2, Chunk>();
 
-    // Render queue.
-    private static ConcurrentDictionary<Vector2, Chunk> m_RenderList = new ConcurrentDictionary<Vector2, Chunk>();
+    // Chunks that are fully generated and are waiting to be rendered.
+    private static Dictionary<Vector2, Chunk> m_RenderList = new Dictionary<Vector2, Chunk>();
 
-    // All Loaded chunks
-    private static ConcurrentDictionary<Vector2,Chunk> m_LoadedChunk = new ConcurrentDictionary<Vector2, Chunk>();
+    // Chunks that are fully generated and ready to be accessed
+    private static Dictionary<Vector2, Chunk> m_LoadedChunk = new Dictionary<Vector2, Chunk>();
 
-    public static Vector2 CameraPosition = new Vector2();
+
     public static Camera Camera;
+    public static Vector2 CameraPosition = new Vector2();
+    
 
-    public static void Load()
+    public static void Update()
+    {
+        // Checks if new chunk should be loaded.
+        UpdateAsyncChunker();
+
+        // Setup the new chunks that were loaded above.
+        UpdateLoadList();
+
+        // Updates the preloaded chunks and generate 
+        // second pass.
+        UpdatePreloaded();
+
+        // Render the fully loaded chunks.
+        Render();
+
+        // Checks if any loaded chunks should be unloaded
+        UpdateUnloader();
+    }
+
+
+    /// <summary>
+    /// Method that updates on a another thread.
+    /// Should be called from a thread or it will lock the engine.
+    /// </summary>
+    public static void UpdateThread()
     {
         while (true)
         {
-            try
-            {
-                for (int x = (int)CameraPosition.x - Engine.RenderDistance; x < (int)CameraPosition.x + Engine.RenderDistance; x++)
-                {
-                    for (int z = (int)CameraPosition.y - Engine.RenderDistance; z < (int)CameraPosition.y + Engine.RenderDistance; z++)
-                    {
-                        var currentPosition = new Vector2(x, z);
-                        if ((CameraPosition - currentPosition).Length() < Engine.RenderDistance 
-                            && ShouldRenderChunk(currentPosition))
-                            AddLoadQueue(currentPosition);
-                        
-                    }
-                }
-
-                int count = 0;
-                foreach (var item in m_ChunkLoadList)
-                {
-                    if (count > 2)
-                    {
-                        //UpdatePreloaded();
-                        break;
-                    }
-
-                    //var timeStart = DateTime.Now;
-                    Vector2 newPosition;
-                    bool result = m_ChunkLoadList.TryDequeue(out newPosition); ;
-
-                    if (result)
-                    {
-                        var newChunk = new Chunk();
-                        newChunk.SetPosition(newPosition);
-
-                        newChunk.ChunkSetup();
-                        NoiseMaker.GenerateChunk(newChunk);
-
-
-                        AddToLoadedList(newChunk);
-                        AddToPreloadedList(newChunk, newChunk.Position);
-
-                        //var timeEnd = DateTime.Now;
-                        //GD.Print("Loading took:", (timeEnd - timeStart).TotalMilliseconds.ToString(), "ms");
-                        count++;
-                    }
-                }
-            }
-            catch(Exception e)
-            {
-                GD.Print(e.ToString());
-            }
-            
+            Update();
         }
     }
 
+    /// <summary>
+    /// Checks if any new chunk should be loaded around the camera.
+    /// </summary>
+    public static void UpdateAsyncChunker()
+    {
+        for (int x = (int)CameraPosition.x - Engine.RenderDistance; x < (int)CameraPosition.x + Engine.RenderDistance; x++)
+            for (int z = (int)CameraPosition.y - Engine.RenderDistance; z < (int)CameraPosition.y + Engine.RenderDistance; z++)
+            {
+                var chunkPosition = new Vector2(x, z);
 
-    // Update current preloaded chunk. 
+                // If the chunk position is in the render radius
+                // and is not already loaded, add it to the queue.
+                if ((CameraPosition - chunkPosition).Length() < Engine.RenderDistance 
+                    && !m_LoadedChunk.ContainsKey(chunkPosition) && !m_ChunkLoadList.Contains(chunkPosition)
+                    && !m_RenderList.ContainsKey(chunkPosition) && !m_PreloadedChunks.ContainsKey(chunkPosition))
+                {
+                    //GD.Print(chunkPosition + " added to Load queue.");
+                    m_ChunkLoadList.Add(chunkPosition);
+                }
+            }
+    }
+
+
+    /// <summary>
+    /// Setups new chunks that should be generated. Chunks are the one enqueued by AsyncChunker.
+    /// </summary>
+    public static void UpdateLoadList()
+    {
+        int numLoadedChunks = 0;
+
+        foreach (Vector2 chunkPos in m_ChunkLoadList.OrderBy(c => DistanceToChunk(c)))
+        {
+            if (m_LoadedChunk.ContainsKey(chunkPos))
+                break;
+
+            var newChunk = new Chunk();
+            newChunk.SetPosition(chunkPos);
+
+            // Setup
+            newChunk.ChunkSetup();
+
+            // Generate the landscape.
+            NoiseMaker.GenerateChunk(newChunk);
+
+            m_LoadedChunk.Add(chunkPos, newChunk);
+        }
+
+        m_ChunkLoadList.Clear();
+    }
+
+
+    /// <summary>
+    /// Updates preloaded chunks and execute second pass of generation that necessite the chunk
+    /// to be surrounded by loaded chunks. E.g: Trees that generates on chunk borders.
+    /// </summary>
     public static void UpdatePreloaded()
     {
-        try
+        for (int i = 0; i < m_LoadedChunk.Count; i++)
         {
-            for (int i = 0; i < m_PreloadedChunks.Count; i++)
+            var chunk = m_LoadedChunk.ElementAt(i).Value;
+
+            if (chunk.Updated == false)
+                chunk.Update();
+
+            if (chunk.isSurrounded && !chunk.Rendered && !m_RenderList.ContainsKey(chunk.Position))
             {
+                //NoiseMaker.GenerateChunkDecoration(chunk);
                 
-
-                var chunk = m_PreloadedChunks.ElementAt(i).Value;
-
-                if (chunk.Updated == false)
-                    chunk.Update();
-
-                Chunk n = null;
-                if (chunk.isSurrounded)
-                {
-                    NoiseMaker.GenerateChunkDecoration(chunk);
-                    AddToRenderList(chunk);
-                    m_PreloadedChunks.TryRemove(chunk.Position, out n);
-                }
+                m_RenderList.Add(chunk.Position, chunk);
             }
         }
-        catch { }
-        
+
     }
+
 
     // Async rendering thread.
     public static void Render()
     {
-        while (true)
+        int numChunkRendered = 0;
+
+        if (m_RenderList.Count <= 0)
+            return;
+
+        foreach (Chunk item in m_RenderList.Values.OrderBy(c => DistanceToChunk(c.Position)))
         {
-            try
-            {
-                if (m_RenderList.Count <= 1)
-                    continue;
+            // Prevent from rendering too much chunks at once.
+            if (numChunkRendered > Engine.chunkRenderedPerTick)
+                return;
 
-                foreach (Chunk item in m_RenderList.Values)
+            //var timeStart = DateTime.Now;
+            Chunk chunk = item;
+
+            if (chunk.isSurrounded)
+            {
+                if (!Engine.Scene.HasNode(chunk.Position.ToString()))
                 {
-                    //var timeStart = DateTime.Now;
-                    Chunk chunk = item;
-
-                    if (chunk.isSurrounded)
-                    {
-                        if (!Engine.Scene.HasNode(chunk.Position.ToString()))
-                        {
-
-                            // Create mesh.
-                            chunk.Render(true);
-
-                            Engine.Scene.CallDeferred("add_child", chunk);
-                        }
-                        else
-                        {
-                            chunk.Render(false);
-                        }
-
-                        // Queues the instancing.
-                        
-                            
-
-                        Chunk n = null;
-                        // Remove from queue.
-                        m_RenderList.TryRemove(chunk.Position, out n);
-                        //var timeEnd = DateTime.Now;
-                        //GD.Print("Meshing took:", (timeEnd - timeStart).TotalMilliseconds.ToString(), "ms");
-                    }
+                    // Create mesh.
+                    chunk.Render(true);
+                    chunk.Rendered = true;
+                    Engine.Scene.CallDeferred("add_child", chunk);
                 }
+
+                numChunkRendered++;
+
+                m_RenderList.Remove(chunk.Position);
             }
-            catch (Exception e)
+        }
+    }
+
+
+    /// <summary>
+    /// Checks if any loaded chunks should be unloaded.
+    /// </summary>
+    public static void UpdateUnloader()
+    {
+        List<Vector2> unloadedChunks = new List<Vector2>();
+
+        foreach (Vector2 loadedChunkPos in m_LoadedChunk.Keys)
+        {
+            // If the chunk position is in the render radius. Add it to the queue.
+            if ((CameraPosition - loadedChunkPos).Length() > Engine.RenderDistance * 2)
             {
-                GD.Print(e.ToString());
+                Chunk chunk = m_LoadedChunk[loadedChunkPos];
+                chunk.Unload();
+
+                unloadedChunks.Add(loadedChunkPos);
+
+                // Remove any trace of the chunk in the memory to prevent
+                // access to a unloaded chunks.
+                if (m_RenderList.ContainsKey(chunk.Position))
+                    m_RenderList.Remove(chunk.Position);
+
+                if (m_PreloadedChunks.ContainsKey(chunk.Position))
+                    m_PreloadedChunks.Remove(chunk.Position);
             }
+        }
+
+        // Reiterate and remove all unloaded chunks.
+        for (int i = 0; i < unloadedChunks.Count; i++)
+        {
+            m_LoadedChunk.Remove(unloadedChunks[i]);
         }
     }
 
@@ -167,6 +211,7 @@ public class ChunkManager
     {
         return (position - CameraPosition).Length();
     }
+
 
     public static bool ShouldRenderChunk(Vector2 chunkPosition)
     {
@@ -178,8 +223,6 @@ public class ChunkManager
     }
 
 
-    // Returns true if a chunk all the chunk surrounding 
-    // this one has been loaded(meaning that it's accesible).
     public static bool IsChunkSurrounded(Vector2 position)
     {
         bool left, right, front, back;
@@ -191,39 +234,12 @@ public class ChunkManager
         return left && right && front && back;
     }
 
+
     public static int GetLoadedCount()
     {
         return m_LoadedChunk.Count();
     }
 
-
-    public static void AddToPreloadedList(Chunk chunk, Vector2 position)
-    {
-        m_PreloadedChunks.TryAdd(position, chunk);
-    }
-
-    // Adds a chunk to the loaded chunk list.
-    public static void AddToLoadedList(Chunk chunk)
-    {
-        m_LoadedChunk.TryAdd(chunk.Position, chunk);
-    }
-
-    // Adds a chunk to the loading chunk list.
-    public static void AddLoadQueue(Vector2 position)
-    {
-        if (m_ChunkLoadList.Contains(position) || m_LoadedChunk.ContainsKey(position))
-        {
-            return;
-        }
-
-        m_ChunkLoadList.Enqueue( position);
-    }
-
-    // Adds a chunk to the render chunk list.
-    public static void AddToRenderList(Chunk chunk)
-    {
-        m_RenderList.TryAdd(chunk.Position, chunk);
-    }
 
     // Gets a chunk
     public static Chunk GetChunk(Vector2 position)
@@ -231,8 +247,9 @@ public class ChunkManager
         if (m_LoadedChunk.ContainsKey(position))
             return m_LoadedChunk[position];
         else
-            throw new System.IndexOutOfRangeException("Attempted to get a non-loaded chunk at: " + position.ToString() + ".");
+            return null;
     }
+
 
     public static void UnloadChunk(Chunk chunk)
     {
@@ -244,4 +261,3 @@ public class ChunkManager
         
     }
 }
-

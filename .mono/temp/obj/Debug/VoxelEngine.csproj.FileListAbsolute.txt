@@ -13,3 +13,5 @@ F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Debug\VoxelEngine.csprojAssemblyRefe
 F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Debug\VoxelEngine.csproj.CoreCompileInputs.cache
 F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Debug\VoxelEngine.dll
 F:\Desktop\repos\VoxelEngine\.mono\temp\obj\Debug\VoxelEngine.pdb
+F:\Desktop\repos\VoxelEngine\.mono\temp\bin\Debug\VoxelEngine.dll
+F:\Desktop\repos\VoxelEngine\.mono\temp\bin\Debug\VoxelEngine.pdb

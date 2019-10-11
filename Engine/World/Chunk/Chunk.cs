@@ -11,9 +11,13 @@ public class Chunk : Spatial
     public static int SUBCHUNK_COUNT = 16;
 
     public Vector2 Position = new Vector2();
+
+    public bool isSetup = false;
+
     public bool isSurrounded = false;
     public bool Updated = false;
     public bool Unloaded = true;
+    public bool Rendered = false;
 
     public BIOME_TYPE Biome = BIOME_TYPE.Plains;
 
@@ -78,7 +82,7 @@ public class Chunk : Spatial
             m_SubChunks[sc].Chunk = this;
         }
 
-
+        isSetup = true;
     }
 
 
@@ -169,7 +173,16 @@ public class Chunk : Spatial
 
     public void Unload()
     {
-        this.CallDeferred("queue_free");
+        if (ChunkLeft != null)
+            ChunkLeft.Updated = false;
+        if (ChunkFront != null)
+            ChunkFront.Updated = false;
+        if (ChunkRight != null)
+            ChunkRight.Updated = false;
+        if (ChunkBack != null)
+            ChunkBack.Updated = false;
+
+        this.QueueFree();
     }
 
 
@@ -187,7 +200,6 @@ public class Chunk : Spatial
         int y = (int)position.y;
         int z = (int)position.z;
 
-        // Skip duplicate code.
         return GetBlock(x, y, z);
     }
 
@@ -288,12 +300,14 @@ public class Chunk : Spatial
 
     public void AddSprite(Vector3 position, Models model)
     {
-        var mesh = ModelLoader.GetModel(model);
-       
         int subChunkIndex = GetSubChunkIdFromHeight((int)position.y);
+
         int subChunkHeight = (int)position.y - ((int)CHUNK_SIZE * (subChunkIndex));
         var localPosition = new Vector3(position.x, subChunkHeight, position.z);
+
+        var mesh = ModelLoader.GetModel(model);
         var sprite = new VoxelSprite(mesh, localPosition);
+
         m_SubChunks[subChunkIndex].AddDecoration(sprite);
 
     }
@@ -302,8 +316,8 @@ public class Chunk : Spatial
     public int HighestBlockAt(int x, int z)
     {
         // Scan from top of the chunk.
-        // Continue until there is a solid block. not -1
-        // else return bottom of chunk. 0.
+        // Continue until there is a solid block. != -1
+        // else return bottom of chunk.
         for(int i = 255; i > 0; i--)
         {
             if(this.GetBlock(x, i, z) != -1)

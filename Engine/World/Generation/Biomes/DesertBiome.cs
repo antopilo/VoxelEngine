@@ -23,7 +23,7 @@ public static class DesertBiome
 
                 for (int i = (int)final - 5; i < final; i++)
                 {
-                    chunk.AddBlock(new Vector3(x, i, z), BLOCK_TYPE.Stone);
+                    chunk.AddBlock(new Vector3(x, i, z), BLOCK_TYPE.Sand);
                 }
 
             }

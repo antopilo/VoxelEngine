@@ -25,10 +25,8 @@ public class PlainBiome
 
                 for (int i = (int)final - 5; i < final; i++)
                 {
-                    chunk.AddBlock(new Vector3(x, i, z), BLOCK_TYPE.Stone);
+                    chunk.AddBlock(new Vector3(x, i, z), BLOCK_TYPE.Grass);
                 }
-
-                
             }
     }
 
@@ -45,13 +43,13 @@ public class PlainBiome
                                                         (int)(chunk.Position.x * 16f) + z);
 
                 // Placing plateaus
-                if (Rng.RandiRange(0, 10000) < 1)
-                {
-                    int treeHeight = Rng.RandiRange(10, 50);
-                    int depth = Rng.RandiRange(25, 70);
-                    int width = Rng.RandiRange(25, 70);
-                    chunk.AddBlocks(Plateau.CreatePlateau(width, treeHeight, depth), new Vector3(0, height - 2, 0));
-                }
+                //if (Rng.RandiRange(0, 10000) < 1)
+                //{
+                //    int treeHeight = Rng.RandiRange(10, 50);
+                //    int depth = Rng.RandiRange(25, 70);
+                //    int width = Rng.RandiRange(25, 70);
+                //    chunk.AddBlocks(Plateau.CreatePlateau(width, treeHeight, depth), new Vector3(0, height - 2, 0));
+                //}
 
                 // Vegetation
                 if (temp > 0.75f) // Flower

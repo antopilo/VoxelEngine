@@ -14,10 +14,29 @@ public enum Threads
 
 public class Engine : Node
 {
-    public static int RenderDistance = 16;
     public static Node Scene { get; set; }
-    private static int CamX = 0;
-    private static int CamZ = 0;
+
+
+    public static int CamX = 0;
+    public static int CamZ = 0;
+
+    public static int RenderDistance = 16;
+    public static int SpawnRadius = 8;
+
+    // Multi-threading
+    private bool MultiThreaded = false;
+    private Thread[] Threads = new Thread[3];
+
+    private static float TickDuration = 1 / 20f;
+    private static float NextTick = 0f;
+
+    public static int chunkRenderedPerTick = 4;
+
+    // UI components for debugging.
+    private bool m_Debug = true;
+    private Control UI;
+    private Label FPS, LoadedCount, x, y, z;
+    private Camera Camera;
 
     public static Vector2 CameraPosition
     {
@@ -27,42 +46,23 @@ public class Engine : Node
         }
     }
 
-    private bool m_Debug = true;
-    private Control UI;
-    private Label FPS, Mem, LoadedCount, x, y, z;
-
-    private Camera Camera;
-    private Thread[] Threads = new Thread[3];
+    private float DeltaTime = 0f;
 
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        Godot.Engine.TargetFps = 144;
-
+        Godot.Engine.TargetFps = 0;
 
         LoadReference();
         ModelLoader.LoadModels();
         NoiseMaker.Initialize();
 
-        var startTime = DateTime.Now;
-
-        var threadStart1 = new ThreadStart(ChunkManager.Load);
-        var threadStart2 = new ThreadStart(ChunkManager.Render);
-        var threadStart3 = new ThreadStart(ChunkManager.UpdatePreloaded);
-
-        Threads[0] = new Thread(threadStart1);
-        Threads[1] = new Thread(threadStart2);
-        Threads[2] = new Thread(threadStart3);
-
-        Threads[0].Start();
-        Threads[1].Start();
-        // Threads[2].Start();
-
-        // 1- ChunkManager.Load();
-        // 2- ChunkManager.UpdatePreloaded();
-        // 3- ChunkManager.Render();
-
-        //GD.Print("TotalTime: ", (DateTime.Now - startTime).TotalMilliseconds.ToString());
+        if (MultiThreaded)
+        {
+            var threadStart1 = new ThreadStart(ChunkManager.UpdateThread);
+            Threads[0] = new Thread(threadStart1);
+            Threads[0].Start();
+        }
     }
 
     public void LoadReference()
@@ -76,7 +76,6 @@ public class Engine : Node
         {
             UI = (Control)Scene.GetNode("DEBUG_UI/HBoxContainer");
             FPS = (Label)UI.GetNode("fps");
-            //Mem = (Label)UI.GetNode("mem");
             LoadedCount = (Label)UI.GetNode("loaded");
             x = (Label)UI.GetNode("x");
             y = (Label)UI.GetNode("y");
@@ -86,11 +85,17 @@ public class Engine : Node
 
     public override void _Process(float delta)
     {
+        // Update delta time.
+        DeltaTime += delta;
+        
+        // Get Chunk position of the camera.
         CamX = (int)Camera.GlobalTransform.origin.x / 16;
         CamZ = (int)Camera.GlobalTransform.origin.z / 16;
+
+        // Send updated camera position to chunk manager.
         ChunkManager.CameraPosition = new Vector2(CamX, CamZ);
 
-        // Debug UI
+        // Update Debugging UI;
         if (m_Debug)
         {
             FPS.Text = "FPS " + Godot.Engine.GetFramesPerSecond().ToString();
@@ -100,8 +105,21 @@ public class Engine : Node
             LoadedCount.Text = "Chunks: " + ChunkManager.GetLoadedCount().ToString();
         }
 
-       
-        ChunkManager.UpdatePreloaded();
+        if (!MultiThreaded)
+        {
+            // Tick
+            if (DeltaTime >= NextTick)
+                Tick();
+        }
+    }
+
+    private void Tick()
+    {
+        GD.Print("Tick");
+        ChunkManager.Update();
+
+        // Calculate when the next tick should happen.
+        NextTick = DeltaTime + TickDuration;
     }
 }
 
