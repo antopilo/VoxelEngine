@@ -24,8 +24,8 @@ namespace VoxelEngine.Engine.World
         {
             var color = m_Palette[type];
 
-            //if ( type == BLOCK_TYPE.Grass)
-            //    color = color.LinearInterpolate(new Color(1, 1, 0),NoiseMaker.GetHumidity(x, z));
+            if ( type == BLOCK_TYPE.Grass)
+                color = color.LinearInterpolate(new Color(1, 1, 0),NoiseMaker.GetHumidity(x, z));
 
             return color;
         }

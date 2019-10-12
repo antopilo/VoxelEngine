@@ -15,18 +15,9 @@ public class NoiseMaker
     private static OpenSimplexNoise Humidity = new OpenSimplexNoise();
     private static OpenSimplexNoise Temperature = new OpenSimplexNoise();
 
-    private static float WaterLevel = 80f;
     public static float Amplitude = 1f;
-    private static BLOCK_TYPE newBlock = BLOCK_TYPE.Stone;
 
 
-    private static int[,] m_Biomes = { 
-        { 0, 0, 0, 0 ,0},
-        { 1, 1, 1, 1, 1},
-        { 2, 2, 2, 2, 2},
-        { 3, 3, 3, 3, 3},
-        { 4, 4, 4, 4, 4}
-    };
 
     public static void Initialize()
     {
@@ -117,7 +108,6 @@ public class NoiseMaker
                 }
         }
     }
-
 
     public static float GetTemperature(int x, int z)
     {

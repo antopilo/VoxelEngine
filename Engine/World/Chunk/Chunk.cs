@@ -15,9 +15,13 @@ public class Chunk : Spatial
     public bool isSetup = false;
 
     public bool isSurrounded = false;
+
+    public bool needUpdate = false;
+
     public bool Updated = false;
-    public bool Unloaded = true;
-    public bool Rendered = false;
+
+    public bool isRendered = false;
+
 
     public BIOME_TYPE Biome = BIOME_TYPE.Plains;
 
@@ -207,6 +211,13 @@ public class Chunk : Spatial
     // Returns a block from global position
     public int GetBlock(int x, int y, int z)
     {
+        if (!IsPositionValid(x, y, z))
+        {
+
+            GD.Print("position invalid:" + new Vector3(x, y, z) + ". Chunk at:" + this.Position);
+            return -1;
+        }
+            
         int subChunkIndex = GetSubChunkIdFromHeight(y);
         int subChunkHeight = y - (CHUNK_SIZE * (subChunkIndex));
         return m_SubChunks[subChunkIndex].GetBlock(x, subChunkHeight, z);
@@ -222,11 +233,10 @@ public class Chunk : Spatial
     // Adds a block into a subchunk from globalposition using ints.
     public void AddBlock(int x, int y, int z, BLOCK_TYPE block)
     {
-        if(block is BLOCK_TYPE.Empty)
-            return;
 
         if(!IsPositionValid(x, y, z))
         {
+            GD.Print("Invalid block palced");
             PlaceInvalidBlock(x, y, z, block);
             return;
         }
@@ -236,7 +246,6 @@ public class Chunk : Spatial
         var localPosition = new Vector3(x, subChunkHeight, z);
 
         m_SubChunks[subChunkIndex].AddBlock(localPosition, block);
-        Updated = false;
     }
 
     // Returns true if the given position is inside the chunk boundaries.
@@ -327,25 +336,31 @@ public class Chunk : Spatial
     }
 
 
-    // Renders all the chunk, including the subchunks.
-    public void Render(bool first)
+    /// <summary>
+    /// Renders a chunk from its data. If the chunk is rendered
+    /// for the first time. It adds it to the scene. If not, it 
+    /// just replaces its mesh with the new one.
+    /// </summary>
+    /// <param name="firstRender"></param>
+    public void Render(bool firstRender)
     {
-        if (first)
+        if (firstRender)
         {
-            // var visibilityNotifier = new VisibilityNotifier();
-            var size = new Vector3(CHUNK_SIZE, CHUNK_SIZE * SUBCHUNK_COUNT, CHUNK_SIZE);
-            // visibilityNotifier.Aabb = new AABB(new Vector3(), size);
-            // this.AddChild(visibilityNotifier);
             for (int i = 0; i < SUBCHUNK_COUNT; i++)
             {
+                // Create each sub chunks and place them
                 var subChunk = m_SubChunks[i];
                 subChunk.Name = i.ToString();
                 subChunk.Translate(new Vector3(0, i * CHUNK_SIZE, 0));
+
+                // Creates the mesh.
                 subChunk.Mesh = Renderer.Render(subChunk);
 
+                // If the subchunk is not empty, create the collision.
                 if(subChunk.Mesh != null)
                     subChunk.CreateTrimeshCollision();
 
+                // Place each voxel sprite in the chunk.
                 foreach (VoxelSprite voxelSprite in subChunk.GetDecorations())
                 {
                     if (voxelSprite is null)
@@ -353,12 +368,10 @@ public class Chunk : Spatial
 
                     var newMesh = new MeshInstance();
                     newMesh.Scale = new Vector3(1f / 8f, 1f / 8f, 1f / 8f);
-                    //newMesh.SetRotationDegrees(new Vector3(0, NoiseMaker.Rng.RandfRange(0, 360), 0));
                     newMesh.AddToGroup("decoration");
                     newMesh.MaterialOverride = Renderer.GetWavingShader;
                     newMesh.SetDeferred("translation", voxelSprite.Position);
                     newMesh.Mesh = voxelSprite.Mesh;
-                    
                     subChunk.CallDeferred("add_child", newMesh);
                 }
 
@@ -377,7 +390,18 @@ public class Chunk : Spatial
             {
                 var subChunk = m_SubChunks[i];
                 subChunk.Mesh = Renderer.Render(subChunk);
+
+                // removes old collisions
+                foreach (Node node in subChunk.GetChildren())
+                {
+                    node.CallDeferred("queue_free");
+                }
+                // Update collisions too
+                if (subChunk.Mesh != null)
+                    subChunk.CreateTrimeshCollision();
             }
+
+            needUpdate = false;
         }
 
     }

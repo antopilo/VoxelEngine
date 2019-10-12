@@ -98,15 +98,7 @@ func _process(delta):
 	if movement:
 		_update_movement(delta)
 		
-	var from = self.project_ray_origin(Vector2(384, 284))
-	var to = from + self.project_ray_normal(Vector2(384, 284)) * 20
-	var directState = PhysicsServer.space_get_direct_state(self.get_world().get_space())
-	var result = directState.intersect_ray(from, to, [self])
-	
-	if result:
-		var position = result.position;
-		var chunkpos = Vector2(position.x / 16, position.z / 16)
-		print(chunkpos)
+
 
 func _physics_process(delta):
 	# Called when collision are enabled

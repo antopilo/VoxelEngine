@@ -130,7 +130,7 @@ public class SubChunk : MeshInstance
         int z = (int)position.z;
     
         // If we are adding an empty block, just remove it.
-        if ((int)block == -1)
+        if (block is BLOCK_TYPE.Empty)
         {
             RemoveBlock(position);
             return;
@@ -153,10 +153,12 @@ public class SubChunk : MeshInstance
         
         // Sets the block and update the total count.
         m_Blocks[x, y, z] = (int)block;
+
+        Chunk.Updated = false;
         BlockCount++;
     }
 
-    // Removes a block in this subchunk.
+    // Removes a block in this subchunk.Z
     public void RemoveBlock(Vector3 position)
     {
         int x = (int)position.x;
@@ -177,6 +179,8 @@ public class SubChunk : MeshInstance
         if (z == 0)
             m_backCount--;
 
+        GD.Print("Removed block!");
+        
 
         // Remove it and decrease the count.
         m_Blocks[x, y, z] = -1;

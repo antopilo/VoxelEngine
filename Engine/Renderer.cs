@@ -62,7 +62,6 @@ public class Renderer
         arrays.Resize((int)ArrayMesh.ArrayType.Max);
         
 
-
         // Reset data.
         Vertices = new Vector3[9999];
         Normals = new Vector3[9999];

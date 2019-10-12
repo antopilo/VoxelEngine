@@ -114,7 +114,7 @@ func _input(event):
 	if viewport.camera != null:
 		camera._input(event) 
 	
- 	# Making sure that we are editing something.
+	# Making sure that we are editing something.
 	if viewport.meshInstance.mesh == null:
 		return
 		

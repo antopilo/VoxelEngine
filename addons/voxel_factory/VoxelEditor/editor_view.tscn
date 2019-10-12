@@ -64,7 +64,6 @@ material = SubResource( 2 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, -0.5, -0.5 )
 
 [node name="Axis" type="Spatial" parent="."]
-editor/display_folded = true
 
 [node name="X" type="ImmediateGeometry" parent="Axis"]
 material_override = SubResource( 3 )
@@ -74,4 +73,3 @@ material_override = SubResource( 3 )
 
 [node name="Z" type="ImmediateGeometry" parent="Axis"]
 material_override = SubResource( 3 )
-

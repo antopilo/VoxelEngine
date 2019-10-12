@@ -23,7 +23,7 @@ public class Engine : Node
     public static int SpawnRadius = 8;
 
     // Multi-threading
-    private bool MultiThreaded = true;
+    public static bool MultiThreaded = true;
     private Thread[] Threads = new Thread[3];
 
     private static float TickDuration = 1 / 20f;
@@ -36,6 +36,9 @@ public class Engine : Node
     private Control UI;
     private Label FPS, LoadedCount, x, y, z;
     private Camera Camera;
+    private ImmediateGeometry debugCursor;
+
+    private Vector3? LookingAtPosition = null;
 
     public static Vector2 CameraPosition
     {
@@ -53,6 +56,8 @@ public class Engine : Node
         Godot.Engine.TargetFps = 0;
 
         LoadReference();
+
+        CreateBlockOutline();
         ModelLoader.LoadModels();
         NoiseMaker.Initialize();
 
@@ -80,6 +85,8 @@ public class Engine : Node
             y = (Label)UI.GetNode("y");
             z = (Label)UI.GetNode("z");
         }
+
+        debugCursor = Scene.GetNode("BlockOutline") as ImmediateGeometry;
     }
 
     public override void _Process(float delta)
@@ -112,6 +119,23 @@ public class Engine : Node
         }
     }
 
+
+    public override void _PhysicsProcess(float delta)
+    {
+        CheckCameraIntersect();
+
+        if (Input.IsActionJustPressed("mouse1"))
+        {
+            if(LookingAtPosition != null)
+            {
+                ChunkManager.SetBlock((Vector3)LookingAtPosition, BLOCK_TYPE.Empty);
+            }
+            
+        }
+        //if(LookingAtPosition != null)
+        //    GD.Print(LookingAtPosition);
+    }
+
     private void Tick()
     {
         GD.Print("Tick");
@@ -119,6 +143,83 @@ public class Engine : Node
 
         // Calculate when the next tick should happen.
         NextTick = DeltaTime + TickDuration;
+    }
+
+
+    private void CreateBlockOutline()
+    {
+        debugCursor.Begin(Mesh.PrimitiveType.LineStrip);
+        debugCursor.SetColor(new Color(1, 0, 0));
+
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[0] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[1] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[2] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[3] * 0.01f);
+
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[3] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[0] * 1.01f);
+                                                          
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[4] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[5] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[1] * 1.01f);
+                                                          
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[5] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[6] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[2] * 1.01f);
+                                                          
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[6] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[7] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[3] * 1.01f);
+                                                          
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[7] * 1.01f);
+        debugCursor.AddVertex(Renderer.CUBE_VERTICES[4] * 1.01f);
+        debugCursor.End();
+    }
+
+
+    /// <summary>
+    /// Check if the camera is currently aiming at a voxel in the world.
+    /// </summary>
+    private void CheckCameraIntersect()
+    {
+        Vector3 hitPosition;
+        var cam = this.Camera;
+        var rayLength = 100;
+
+        Vector2 viewportSize = cam.GetViewport().Size / 2;
+
+        // Making sure we start the raycast in the middle of the screen.
+        var rayOrigin = cam.ProjectRayOrigin(viewportSize);
+        var rayDirection = rayOrigin + cam.ProjectRayNormal(viewportSize) * rayLength;
+
+        // direct state is used to make collisions queuries
+        var directState = PhysicsServer.SpaceGetDirectState(cam.GetWorld().Space);
+
+        // TODO: Add hit exception in here.
+        var rayResult = directState.IntersectRay(rayOrigin, rayDirection, new Godot.Collections.Array() { cam, debugCursor});
+        var offset = new Vector3(0.5f, 0.5f, 0.5f);
+
+        // If the ray hit something.
+        if (rayResult.Count != 0)
+        {
+            hitPosition = (Vector3)rayResult["position"] - offset;
+            Vector3 hitNormal = (Vector3)rayResult["normal"];
+
+            // removing floating points.
+            hitPosition = new Vector3(Mathf.Stepify(hitPosition.x, 1),
+                                    Mathf.Stepify(hitPosition.y, 1),
+                                    Mathf.Stepify(hitPosition.z, 1));
+
+            debugCursor.Translation = hitPosition - hitNormal;
+
+            LookingAtPosition = hitPosition - hitNormal;
+        }
+        else
+        {
+            LookingAtPosition = null;
+        }
+
+        
     }
 }
 
