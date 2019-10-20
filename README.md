@@ -27,3 +27,8 @@ You can also open the solution using visual studio but you won't be able to run 
 ## Documentation
 
 [Documentation](https://www.notion.so/aba3f979a35a4bdebd77c90c32680afa)
+
+## Gallery
+
+[Video](https://cdn.discordapp.com/attachments/218361207990648832/593636606129471489/2019-06-26_22-57-15.mp4)
+
